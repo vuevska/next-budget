@@ -1,18 +1,16 @@
-"use client";
-
-import { useSession } from "next-auth/react";
 import SidePanel from "./SidePanel";
 import MainPanel from "../page";
+import { getServerSession } from "next-auth";
+import authOptions from "../lib/authOptions";
 
-export default function AuthLayoutWrapper({
+export default async function AuthLayoutWrapper({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { status } = useSession();
+  const session = await getServerSession(authOptions);
 
-  // Only show layout with sidebar when authenticated
-  if (status === "authenticated") {
+  if (session) {
     return (
       <div className="flex">
         <SidePanel />
@@ -21,6 +19,5 @@ export default function AuthLayoutWrapper({
     );
   }
 
-  // For unauthenticated or loading state, just show children
   return <>{children}</>;
 }
