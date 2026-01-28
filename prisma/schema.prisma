@@ -51,6 +51,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   AccountType   AccountType[]
+  Category      Category[]
 }
 
 model VerificationToken {
@@ -59,4 +60,30 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Category {
+  id          Int           @id @default(autoincrement())
+  name        String        @db.VarChar(255)
+  userId      String
+  user        User          @relation(fields: [userId], references: [id])
+  SubCategory SubCategory[]
+}
+
+model SubCategory {
+  id          Int           @id @default(autoincrement())
+  name        String        @db.VarChar(255)
+  budgeted    Float         @db.Double
+  catId       Int
+  category    Category      @relation(fields: [catId], references: [id])
+  Transaction Transaction[]
+}
+
+model Transaction {
+  id          Int         @id @default(autoincrement())
+  amount      Float       @db.Double
+  isInflow    Boolean
+  description String      @db.VarChar(255)
+  subCatId    Int
+  subCategory SubCategory @relation(fields: [subCatId], references: [id])
 }
