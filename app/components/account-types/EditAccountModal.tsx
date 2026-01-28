@@ -1,11 +1,17 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@radix-ui/themes";
 import { FiX } from "react-icons/fi";
 import AccountFormButtons from "./AccountFormButtons";
 import { updateAccount } from "@/app/lib/accountTypes";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Label } from "@radix-ui/themes/components/context-menu";
+import ErrorMessage from "../ErrorMessage";
+import { editAccountTypeSchema } from "@/app/lib/validationSchema";
+
+type EditAccountFormValues = z.infer<typeof editAccountTypeSchema>;
 
 interface EditAccountModalProps {
   id: number;
@@ -20,12 +26,20 @@ export default function EditAccountModal({
   onClose,
   onSave,
 }: EditAccountModalProps) {
-  const [name, setName] = useState(currentName);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setValue,
+  } = useForm<EditAccountFormValues>({
+    resolver: zodResolver(editAccountTypeSchema),
+    defaultValues: { name: currentName },
+  });
 
-  const handleSave = async () => {
-    if (!name.trim()) return;
+  const onSubmit = async (data: EditAccountFormValues) => {
     try {
-      const updated = await updateAccount(id, name);
+      console.log("SUBMIT");
+      const updated = await updateAccount(id, data.name);
       onSave(updated);
       onClose();
     } catch (error) {
@@ -45,23 +59,28 @@ export default function EditAccountModal({
             <FiX size={24} />
           </Button>
         </div>
-        <div className="space-y-4">
+
+        <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
           <div>
             <Label className="block text-sm font-medium text-slate-300 mb-2">
               Account Name
             </Label>
+            <ErrorMessage>{errors.name?.message}</ErrorMessage>
             <input
               type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              {...register("name")}
               className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white placeholder-slate-400 focus:outline-none focus:border-slate-500"
               autoFocus
-              onKeyDown={(e) => e.key === "Enter" && handleSave()}
             />
           </div>
           <p className="text-sm text-slate-400">Amount cannot be edited here</p>
-          <AccountFormButtons onSave={handleSave} onCancel={onClose} />
-        </div>
+
+          <AccountFormButtons
+            onSave={handleSubmit(onSubmit)}
+            onCancel={onClose}
+            saveLabel="Save Changes"
+          />
+        </form>
       </div>
     </div>
   );

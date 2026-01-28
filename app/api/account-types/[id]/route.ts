@@ -1,4 +1,5 @@
 import authOptions from "@/app/lib/authOptions";
+import { editAccountTypeSchema } from "@/app/lib/validationSchema";
 import prisma from "@/prisma/client";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
@@ -11,6 +12,9 @@ export async function PATCH(
   if (!session) return NextResponse.json({}, { status: 401 });
 
   const body = await request.json();
+  const validation = editAccountTypeSchema.safeParse(body);
+  if (!validation.success)
+    return NextResponse.json(validation.error.format(), { status: 400 });
   const { name } = body;
 
   const resolvedParams = await params;

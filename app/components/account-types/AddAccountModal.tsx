@@ -1,11 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@radix-ui/themes";
+import { Button, Text } from "@radix-ui/themes";
 import { FiX } from "react-icons/fi";
 import AccountFormButtons from "./AccountFormButtons";
 import { createAccount } from "@/app/lib/accountTypes";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { createAccountTypeSchema } from "@/app/lib/validationSchema";
+import { z } from "zod";
 import { Label } from "@radix-ui/themes/components/context-menu";
+import ErrorMessage from "../ErrorMessage";
+
+type AccountFormValues = z.infer<typeof createAccountTypeSchema>;
 
 interface AddAccountModalProps {
   onClose: () => void;
@@ -16,16 +22,20 @@ export default function AddAccountModal({
   onClose,
   onAdd,
 }: AddAccountModalProps) {
-  const [name, setName] = useState("");
-  const [amount, setAmount] = useState("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<AccountFormValues>({
+    resolver: zodResolver(createAccountTypeSchema),
+  });
 
-  const handleAdd = async () => {
-    if (!name.trim()) return;
+  const onSubmit = async (data: AccountFormValues) => {
     try {
-      const created = await createAccount(name, parseFloat(amount) || 0);
+      const created = await createAccount(data.name, data.amount);
       onAdd(created);
-      setName("");
-      setAmount("");
+      reset();
       onClose();
     } catch (error) {
       console.error(error);
@@ -44,38 +54,38 @@ export default function AddAccountModal({
             <FiX size={24} />
           </Button>
         </div>
-        <div className="space-y-4">
+
+        <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
           <div>
             <Label className="block text-sm font-medium text-slate-300 mb-2">
               Account Name
             </Label>
+            <ErrorMessage>{errors.name?.message}</ErrorMessage>
             <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Savings, Checking"
-              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white placeholder-slate-400 focus:outline-none focus:border-slate-500"
-              autoFocus
-              onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+              className="w-full rounded border p-2 text-slate-800"
+              {...register("name")}
             />
+          </div>
+          <div>
             <Label className="block text-sm font-medium text-slate-300 mb-2 mt-3">
               Starting Balance
             </Label>
+            <ErrorMessage>{errors.amount?.message}</ErrorMessage>
             <input
               type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              className="w-full rounded border p-2 text-slate-800"
               placeholder="0 мкд"
-              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white placeholder-slate-400 focus:outline-none focus:border-slate-500"
-              onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+              {...register("amount", { valueAsNumber: true })}
             />
           </div>
+
           <AccountFormButtons
-            onSave={handleAdd}
+            onSave={handleSubmit(onSubmit)}
             onCancel={onClose}
             saveLabel="Add Account"
           />
-        </div>
+        </form>
       </div>
     </div>
   );
