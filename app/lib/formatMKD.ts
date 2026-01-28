@@ -1,12 +1,25 @@
-export function formatMKD(amount: number | string): string {
-  if (amount === null || amount === undefined || amount === "") return "";
+import { useState, useEffect } from "react";
 
-  const numberAmount = typeof amount === "string" ? parseFloat(amount) : amount;
+export function formatMKD(amount: number | string) {
+  const [formatted, setFormatted] = useState<string>("");
 
-  return new Intl.NumberFormat("mk-MK", {
-    style: "currency",
-    currency: "MKD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(numberAmount);
+  useEffect(() => {
+    if (amount === null || amount === undefined || amount === "") {
+      setFormatted("");
+      return;
+    }
+    const numberAmount =
+      typeof amount === "string" ? parseFloat(amount) : amount;
+
+    const formattedValue = new Intl.NumberFormat("mk-MK", {
+      style: "currency",
+      currency: "MKD",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(numberAmount);
+
+    setFormatted(formattedValue);
+  }, [amount]);
+
+  return formatted;
 }
