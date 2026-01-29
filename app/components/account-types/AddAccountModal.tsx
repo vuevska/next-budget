@@ -96,7 +96,7 @@ export default function AddAccountModal({
                 type="number"
                 step="0.01"
                 className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
-                placeholder="0.00"
+                placeholder="0.00 мкд"
                 {...register("amount", { valueAsNumber: true })}
               />
             </div>
