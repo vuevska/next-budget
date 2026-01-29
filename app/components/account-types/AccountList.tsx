@@ -32,7 +32,7 @@ export default function AccountList({ accounts }: AccountListProps) {
 
   return (
     <>
-      <div className="space-y-2">
+      <div className="space-y-2 overflow-y-auto h-full pr-1">
         {accountsList.map((account) => (
           <AccountCard
             key={account.id}

@@ -23,7 +23,7 @@ export default async function SidePanel() {
         <h2 className="text-xl font-bold">Next Budget</h2>
       </div>
 
-      <Box className="flex-1 p-5 overflow-hidden">
+      <Box className="flex-1 p-3 overflow-hidden">
         <AccountList accounts={accountTypesByUser} />
       </Box>
 
