@@ -67,6 +67,7 @@ model Category {
   name        String        @db.VarChar(255)
   userId      String
   user        User          @relation(fields: [userId], references: [id])
+  order       Int           @default(0)
   SubCategory SubCategory[]
 }
 

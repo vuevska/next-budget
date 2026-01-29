@@ -1,3 +1,5 @@
+"use server";
+
 import prisma from "@/prisma/client";
 import { getServerSession } from "next-auth";
 import authOptions from "./authOptions";
@@ -15,7 +17,7 @@ export async function getCategories(): Promise<
   return await prisma.category.findMany({
     where: { user: session.user },
     include: { SubCategory: true },
-    orderBy: { id: "desc" },
+    orderBy: { order: "asc" },
   });
 }
 
@@ -83,4 +85,15 @@ export async function createSubCategory(
     console.error("Error creating subcategory:", error);
     return { success: false, error: "Failed to create subcategory" };
   }
+}
+
+export async function persistCategoryOrder(categories: { id: number }[]) {
+  await prisma.$transaction(
+    categories.map((cat, index) =>
+      prisma.category.update({
+        where: { id: cat.id },
+        data: { order: index },
+      }),
+    ),
+  );
 }
