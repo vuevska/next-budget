@@ -5,10 +5,10 @@ import { Category, SubCategory } from "@prisma/client";
 import { createCategory } from "@/app/lib/categories";
 import { IoMdClose } from "react-icons/io";
 
-interface AddCategoryFormProps {
+type AddCategoryFormProps = Readonly<{
   onAddCategory: (category: Category & { SubCategory: SubCategory[] }) => void;
   onCancel: () => void;
-}
+}>;
 
 export default function AddCategoryForm({
   onAddCategory,

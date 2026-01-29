@@ -5,11 +5,11 @@ import { Category, SubCategory } from "@prisma/client";
 import { Dialog, Box } from "@radix-ui/themes";
 import { createCategory } from "@/app/lib/categories";
 
-interface AddCategoryModalProps {
+type AddCategoryModalProps = Readonly<{
   isOpen: boolean;
   onClose: () => void;
   onAddCategory: (category: Category & { SubCategory: SubCategory[] }) => void;
-}
+}>;
 
 export default function AddCategoryModal({
   isOpen,

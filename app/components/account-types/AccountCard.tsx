@@ -4,10 +4,10 @@ import { AccountType } from "@prisma/client";
 import { Button } from "@radix-ui/themes";
 import { FiEdit2 } from "react-icons/fi";
 
-interface AccountCardProps {
+type AccountCardProps = Readonly<{
   account: AccountType;
   onEdit: (id: number, name: string) => void;
-}
+}>;
 
 export default function AccountCard({ account, onEdit }: AccountCardProps) {
   return (
@@ -16,9 +16,7 @@ export default function AccountCard({ account, onEdit }: AccountCardProps) {
         <p className="text-white font-medium text-sm truncate">
           {account.name}
         </p>
-        <p className="text-slate-300 text-xs">
-          {formatMKD(account.amount)}
-        </p>
+        <p className="text-slate-300 text-xs">{formatMKD(account.amount)}</p>
       </div>
       <Button
         onClick={() => onEdit(account.id, account.name)}

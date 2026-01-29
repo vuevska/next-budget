@@ -8,9 +8,9 @@ import AccountCard from "./AccountCard";
 import AddAccountModal from "./AddAccountModal";
 import EditAccountModal from "./EditAccountModal";
 
-interface AccountListProps {
+type AccountListProps = Readonly<{
   accounts: AccountType[];
-}
+}>;
 
 export default function AccountList({ accounts }: AccountListProps) {
   const [accountsList, setAccountsList] = useState(accounts);

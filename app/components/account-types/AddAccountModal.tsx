@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Text } from "@radix-ui/themes";
+import { Button } from "@radix-ui/themes";
 import { FiX } from "react-icons/fi";
 import AccountFormButtons from "./AccountFormButtons";
 import { createAccount } from "@/app/lib/accountTypes";
@@ -13,10 +13,10 @@ import ErrorMessage from "../ErrorMessage";
 
 type AccountFormValues = z.infer<typeof createAccountTypeSchema>;
 
-interface AddAccountModalProps {
+type AddAccountModalProps = Readonly<{
   onClose: () => void;
   onAdd: (account: any) => void;
-}
+}>;
 
 export default function AddAccountModal({
   onClose,
