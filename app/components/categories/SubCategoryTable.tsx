@@ -3,9 +3,9 @@
 import React from "react";
 import { SubCategory } from "@prisma/client";
 
-interface SubCategoryTableProps {
+type SubCategoryTableProps = Readonly<{
   subCategories: SubCategory[];
-}
+}>;
 
 export default function SubCategoryTable({
   subCategories,

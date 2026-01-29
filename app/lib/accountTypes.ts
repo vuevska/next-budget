@@ -1,23 +1,29 @@
+import axios from "axios";
+
 export async function createAccount(name: string, amount: number) {
-  const res = await fetch("/api/account-types", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, amount }),
-  });
-
-  if (!res.ok) throw new Error("Failed to create account");
-
-  return res.json();
+  try {
+    const res = await axios.post("/api/account-types", { name, amount });
+    return res.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        error.response?.data?.message || "Failed to create account",
+      );
+    }
+    throw new Error("Failed to create account");
+  }
 }
 
 export async function updateAccount(id: number, name: string) {
-  const res = await fetch(`/api/account-types/${id}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name }),
-  });
-
-  if (!res.ok) throw new Error("Failed to update account");
-
-  return res.json();
+  try {
+    const res = await axios.patch(`/api/account-types/${id}`, { name });
+    return res.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        error.response?.data?.message || "Failed to update account",
+      );
+    }
+    throw new Error("Failed to update account");
+  }
 }
