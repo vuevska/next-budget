@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import { formatMKD } from "@/app/lib/formatMKD";
 import { SubCategory } from "@prisma/client";
 
 type SubCategoryTableProps = Readonly<{
@@ -52,7 +52,7 @@ export default function SubCategoryTable({
 
                 <td className="px-4 py-2 text-right">
                   <span className="font-medium text-slate-700">
-                    ${subCategory.budgeted.toFixed(2)}
+                    {formatMKD(subCategory.budgeted)}
                   </span>
                 </td>
 
@@ -67,14 +67,14 @@ export default function SubCategoryTable({
                       />
                     </div>
                     <span className="font-medium text-rose-600 text-xs min-w-[48px] text-right">
-                      $0.00
+                      {formatMKD(0.0)}
                     </span>
                   </div>
                 </td>
 
                 <td className="px-4 py-2 text-right">
                   <span className="font-medium text-emerald-600">
-                    ${left.toFixed(2)}
+                    {formatMKD(left)}
                   </span>
                 </td>
               </tr>

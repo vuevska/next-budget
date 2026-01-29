@@ -1,7 +1,7 @@
-import { formatMKD } from "@/app/lib/formatMKD";
 import { AccountType } from "@prisma/client";
 import { Button } from "@radix-ui/themes";
 import { FiEdit2 } from "react-icons/fi";
+import FormattedAmount from "../FormattedAmount";
 
 type AccountCardProps = Readonly<{
   account: AccountType;
@@ -15,7 +15,9 @@ export default function AccountCard({ account, onEdit }: AccountCardProps) {
         <p className="text-white font-medium text-sm truncate">
           {account.name}
         </p>
-        <p className="text-slate-300 text-xs">{formatMKD(account.amount)}</p>
+        <p className="text-slate-300 text-xs">
+          <FormattedAmount amount={account.amount} />
+        </p>
       </div>
       <Button
         onClick={() => onEdit(account.id, account.name)}

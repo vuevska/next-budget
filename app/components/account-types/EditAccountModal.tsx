@@ -1,4 +1,4 @@
-import { Button, Callout } from "@radix-ui/themes";
+import { Button } from "@radix-ui/themes";
 import { FiX } from "react-icons/fi";
 import AccountFormButtons from "./AccountFormButtons";
 import { updateAccount } from "@/app/lib/accountTypes";
@@ -69,13 +69,6 @@ export default function EditAccountModal({
               <FiX size={24} />
             </Button>
           </div>
-
-          {errors.root && (
-            <Callout.Root color="red" className="mb-4">
-              <Callout.Text>{errors.root?.message}</Callout.Text>
-            </Callout.Root>
-          )}
-
           <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
             <div>
               <Label className="block text-sm font-semibold text-slate-700 mb-2">

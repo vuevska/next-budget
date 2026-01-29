@@ -4,6 +4,15 @@ import React, { useState } from "react";
 import { SubCategory } from "@prisma/client";
 import { createSubCategory } from "@/app/lib/categories";
 import { IoMdClose } from "react-icons/io";
+import { createSubCategorySchema } from "@/app/lib/validationSchema";
+import z from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Label } from "@radix-ui/themes/components/context-menu";
+import ErrorMessage from "../ErrorMessage";
+import { Button } from "@radix-ui/themes";
+
+type SubCategoryFormValues = z.infer<typeof createSubCategorySchema>;
 
 type AddSubCategoryFormProps = Readonly<{
   categoryId: number;
@@ -16,99 +25,64 @@ export default function AddSubCategoryForm({
   onAddSubCategory,
   onCancel,
 }: AddSubCategoryFormProps) {
-  const [subCategoryName, setSubCategoryName] = useState("");
-  const [budgeted, setBudgeted] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm<SubCategoryFormValues>({
+    resolver: zodResolver(createSubCategorySchema),
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!subCategoryName.trim()) {
-      setError("Subcategory name is required");
-      return;
-    }
-
-    if (!budgeted.trim() || isNaN(parseFloat(budgeted))) {
-      setError("Please enter a valid budget amount");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-
+  const onSubmit = async (data: SubCategoryFormValues) => {
     try {
-      const result = await createSubCategory(
-        categoryId,
-        subCategoryName.trim(),
-        parseFloat(budgeted),
-      );
-      if (result.success && result.subCategory) {
-        onAddSubCategory(categoryId, result.subCategory);
-        setSubCategoryName("");
-        setBudgeted("");
-      } else {
-        setError(result.error || "Failed to create subcategory");
-      }
-    } catch (err) {
-      setError("An error occurred while creating the subcategory");
-    } finally {
-      setLoading(false);
+      const result = await createSubCategory(categoryId, data.name);
+      onAddSubCategory(categoryId, result.subCategory);
+    } catch (err: any) {
+      setError("root", {
+        type: "manual",
+        message: err?.message || "Unexpected error",
+      });
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-2">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
+      <div className="grid gap-2">
         <div>
-          <label className="block text-xs font-semibold text-gray-700 mb-1">
-            Subcategory Name
-          </label>
+          <Label className="block text-xs font-semibold text-gray-700 mb-1">
+            Sub-Category Name
+          </Label>
+          <ErrorMessage>{errors.name?.message}</ErrorMessage>
           <input
             type="text"
-            value={subCategoryName}
-            onChange={(e) => setSubCategoryName(e.target.value)}
+            {...register("name")}
             placeholder="e.g., Vegetables, Internet"
             className="w-full px-2 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition text-xs"
-            disabled={loading}
+            disabled={isSubmitting}
             autoFocus
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-gray-700 mb-1">
-            Budget Amount
-          </label>
-          <input
-            type="number"
-            step="0.01"
-            value={budgeted}
-            onChange={(e) => setBudgeted(e.target.value)}
-            placeholder="0.00"
-            className="w-full px-2 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition text-xs"
-            disabled={loading}
           />
         </div>
       </div>
 
-      {error && <p className="text-xs text-red-600 font-medium">{error}</p>}
-
       <div className="flex gap-2 justify-end">
-        <button
+        <Button
           type="button"
           onClick={onCancel}
           className="flex items-center gap-1 px-2 py-1.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition duration-150 font-medium text-xs"
-          disabled={loading}
+          disabled={isSubmitting}
         >
           <IoMdClose size={12} />
           Cancel
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
-          disabled={loading}
+          disabled={isSubmitting}
           className="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition duration-150 font-medium text-xs disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? "Adding..." : "Add Subcategory"}
-        </button>
+          {isSubmitting ? "Adding..." : "Add Subcategory"}
+        </Button>
       </div>
     </form>
   );
