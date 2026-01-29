@@ -12,9 +12,11 @@ export default async function AuthLayoutWrapper({
 
   if (session) {
     return (
-      <div className="flex">
+      <div className="flex h-screen overflow-hidden">
         <SidePanel />
-        <MainPanel />
+        <main className="flex-1 h-full overflow-y-auto">
+          <MainPanel />
+        </main>
       </div>
     );
   }

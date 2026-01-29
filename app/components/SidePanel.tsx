@@ -18,12 +18,12 @@ export default async function SidePanel() {
   });
 
   return (
-    <aside className="w-64 min-h-screen bg-slate-800 flex flex-col">
+    <aside className="w-64 h-full bg-slate-800 flex flex-col overflow-hidden">
       <div className="m-2 p-5 text-white">
         <h2 className="text-xl font-bold">Next Budget</h2>
       </div>
 
-      <Box className="flex-1 p-5">
+      <Box className="flex-1 p-5 overflow-hidden">
         <AccountList accounts={accountTypesByUser} />
       </Box>
 
