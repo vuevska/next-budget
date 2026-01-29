@@ -1,4 +1,3 @@
-"use client";
 import { formatMKD } from "@/app/lib/formatMKD";
 import { AccountType } from "@prisma/client";
 import { Button } from "@radix-ui/themes";

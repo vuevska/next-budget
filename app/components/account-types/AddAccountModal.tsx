@@ -1,5 +1,3 @@
-"use client";
-
 import { Button, Callout } from "@radix-ui/themes";
 import { FiX } from "react-icons/fi";
 import AccountFormButtons from "./AccountFormButtons";

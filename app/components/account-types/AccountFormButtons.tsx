@@ -1,11 +1,11 @@
 import { Button } from "@radix-ui/themes";
 
-interface AccountFormButtonsProps {
+type AccountFormButtonsProps = Readonly<{
   onSave: () => void;
   onCancel: () => void;
   saveLabel?: string;
   cancelLabel?: string;
-}
+}>;
 
 export default function AccountFormButtons({
   onSave,
