@@ -1,22 +1,23 @@
 import { Box } from "@radix-ui/themes";
 import SignOutButton from "./signout/SignOutButton";
 import { TbUserDollar } from "react-icons/tb";
-import prisma from "@/prisma/client";
-import { getServerSession } from "next-auth";
-import authOptions from "../lib/authOptions";
 import { AccountType } from "@prisma/client";
 import AccountList from "./account-types/AccountList";
 
-export default async function SidePanel() {
-  const session = await getServerSession(authOptions);
+type SidePanelProps = Readonly<{
+  accounts: AccountType[];
+  user?: {
+    name?: string | null;
+    email?: string | null;
+  };
+  onSelectAccount?: (id: number | null) => void;
+}>;
 
-  if (!session) {
-    return <div>Please log in to see your issues.</div>;
-  }
-  const accountTypesByUser: AccountType[] = await prisma.accountType.findMany({
-    where: { user: session.user },
-  });
-
+export default function SidePanel({
+  accounts,
+  user,
+  onSelectAccount,
+}: SidePanelProps) {
   return (
     <>
       <div className="m-2 p-5 text-white">
@@ -24,11 +25,14 @@ export default async function SidePanel() {
       </div>
 
       <Box className="flex-1 p-3 overflow-hidden">
-        <AccountList accounts={accountTypesByUser} />
+        <AccountList
+          accounts={accounts}
+          onAccountClick={(id) => onSelectAccount?.(id)}
+        />
       </Box>
 
       <div className="p-5 border-t border-slate-700">
-        {session?.user && (
+        {user && (
           <div className="mb-4">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center">
@@ -36,10 +40,8 @@ export default async function SidePanel() {
               </div>
 
               <div>
-                <p className="text-white font-medium text-sm">
-                  {session.user.name}
-                </p>
-                <p className="text-slate-400 text-xs">{session.user.email}</p>
+                <p className="text-white font-medium text-sm">{user.name}</p>
+                <p className="text-slate-400 text-xs">{user.email}</p>
               </div>
             </div>
             <SignOutButton />

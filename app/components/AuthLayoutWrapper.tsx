@@ -1,8 +1,7 @@
-import SidePanel from "./SidePanel";
-import SidePanelWrapper from "./SidePanelWrapper";
-import MainPanel from "../page";
+import LayoutContent from "./LayoutContent";
 import { getServerSession } from "next-auth";
 import authOptions from "../lib/authOptions";
+import prisma from "@/prisma/client";
 
 export default async function AuthLayoutWrapper({
   children,
@@ -14,14 +13,16 @@ export default async function AuthLayoutWrapper({
     return <>{children}</>;
   }
 
-  return (
-    <div className="flex h-screen overflow-hidden">
-      <SidePanelWrapper>
-        <SidePanel />
-      </SidePanelWrapper>
-      <main className="flex-1 h-full overflow-y-auto">
-        <MainPanel />
-      </main>
-    </div>
-  );
+  const [categories, accounts] = await Promise.all([
+    prisma.category.findMany({
+      where: { user: session.user },
+      include: { SubCategory: true },
+      orderBy: { order: "asc" },
+    }),
+    prisma.accountType.findMany({
+      where: { user: session.user },
+    }),
+  ]);
+
+  return <LayoutContent accounts={accounts} categories={categories} />;
 }

@@ -25,9 +25,13 @@ import { SortableCategoryItem } from "./SortableCategoryItem";
 
 type CategoryListProps = Readonly<{
   categories: (Category & { SubCategory: SubCategory[] })[];
+  onAccountClick?: (id: number) => void;
 }>;
 
-export default function CategoryList({ categories }: CategoryListProps) {
+export default function CategoryList({
+  categories,
+  onAccountClick,
+}: CategoryListProps) {
   const [categoryList, setCategoryList] = useState(categories);
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [expandedAddSubCategory, setExpandedAddSubCategory] = useState<
@@ -164,6 +168,7 @@ export default function CategoryList({ categories }: CategoryListProps) {
                     )
                   }
                   onAddSubCategory={handleAddSubCategory}
+                  onAccountClick={onAccountClick}
                 />
               ))}
             </div>

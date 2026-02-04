@@ -8,11 +8,12 @@ datasource db {
 }
 
 model AccountType {
-  id     Int    @id @default(autoincrement())
-  name   String @db.VarChar(255)
-  amount Float  @db.Double
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
+  id          Int           @id @default(autoincrement())
+  name        String        @db.VarChar(255)
+  amount      Float         @db.Double
+  userId      String
+  user        User          @relation(fields: [userId], references: [id])
+  Transaction Transaction[]
 }
 
 model Account {
@@ -81,10 +82,14 @@ model SubCategory {
 }
 
 model Transaction {
-  id          Int         @id @default(autoincrement())
-  amount      Float       @db.Double
-  isInflow    Boolean
-  description String      @db.VarChar(255)
-  subCatId    Int
-  subCategory SubCategory @relation(fields: [subCatId], references: [id])
+  id            Int         @id @default(autoincrement())
+  amount        Float       @db.Double
+  isInflow      Boolean
+  description   String      @db.VarChar(255)
+  payee         String      @db.VarChar(255)
+  date          DateTime    @default(now())
+  subCatId      Int
+  subCategory   SubCategory @relation(fields: [subCatId], references: [id])
+  accountTypeId Int
+  accountType   AccountType @relation(fields: [accountTypeId], references: [id])
 }

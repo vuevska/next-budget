@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { AccountType } from "@prisma/client";
 import { FiPlus } from "react-icons/fi";
@@ -10,9 +8,13 @@ import EditAccountModal from "./EditAccountModal";
 
 type AccountListProps = Readonly<{
   accounts: AccountType[];
+  onAccountClick?: (id: number) => void;
 }>;
 
-export default function AccountList({ accounts }: AccountListProps) {
+export default function AccountList({
+  accounts,
+  onAccountClick,
+}: AccountListProps) {
   const [accountsList, setAccountsList] = useState(accounts);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<{
@@ -38,6 +40,7 @@ export default function AccountList({ accounts }: AccountListProps) {
             key={account.id}
             account={account}
             onEdit={(id, name) => setEditingAccount({ id, name })}
+            onClick={onAccountClick}
           />
         ))}
 
