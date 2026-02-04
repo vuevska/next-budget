@@ -43,8 +43,28 @@ export async function DELETE(
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
+  const account = await prisma.accountType.findUnique({
+    where: { id: transaction.accountTypeId },
+  });
+
+  if (!account || account.userId !== user.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  }
+
   await prisma.transaction.delete({
     where: { id: transactionId },
+  });
+
+  let updatedAmount;
+  if (transaction.isInflow) {
+    updatedAmount = account.amount - transaction.amount;
+  } else {
+    updatedAmount = account.amount + transaction.amount;
+  }
+
+  await prisma.accountType.update({
+    where: { id: transaction.accountTypeId },
+    data: { amount: updatedAmount },
   });
 
   return NextResponse.json({ success: true });

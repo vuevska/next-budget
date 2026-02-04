@@ -9,6 +9,7 @@ import EmptyTransactions from "./EmptyTransactions";
 import TransactionsTable from "./TransactionsTable";
 import { getSubCategories } from "@/app/lib/categories";
 import FormattedAmount from "../FormattedAmount";
+import DeleteTransactionModal from "./DeleteTransactionModal";
 
 type TransactionListViewProps = Readonly<{
   account: AccountType;
@@ -29,6 +30,9 @@ export default function TransactionListView({
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
+  const [deleteConfirmationId, setDeleteConfirmationId] = useState<
+    number | null
+  >(null);
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -74,19 +78,38 @@ export default function TransactionListView({
   };
 
   const handleDeleteTransaction = async (id: number) => {
-    if (
-      !confirm("Are you sure you want to delete this transaction with id " + id)
-    )
-      return;
+    setDeleteConfirmationId(id);
+  };
+
+  const confirmDeleteTransaction = async () => {
+    const id = deleteConfirmationId;
+    if (!id) return;
 
     try {
       const response = await deleteTransaction(id);
       if (response?.data?.success) {
+        const deletedTransaction = transactions.find((t) => t.id === id);
+
         setTransactions((prev) => prev.filter((t) => t.id !== id));
+
+        if (deletedTransaction) {
+          const amountChange = deletedTransaction.isInflow
+            ? -deletedTransaction.amount
+            : deletedTransaction.amount;
+
+          const updatedAccount = {
+            ...account,
+            amount: account.amount + amountChange,
+          };
+
+          onAccountUpdate(updatedAccount);
+        }
+
+        setDeleteConfirmationId(null);
       }
     } catch (error) {
       console.error("Error deleting transaction:", error);
-      alert("Failed to delete transaction");
+      setDeleteConfirmationId(null);
     }
   };
 
@@ -145,6 +168,13 @@ export default function TransactionListView({
           onClose={() => setIsModalOpen(false)}
           onAdd={handleAddTransaction}
           subCategories={subCategories}
+        />
+      )}
+
+      {deleteConfirmationId !== null && (
+        <DeleteTransactionModal
+          onCancel={() => setDeleteConfirmationId(null)}
+          onConfirm={confirmDeleteTransaction}
         />
       )}
     </div>
