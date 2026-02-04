@@ -4,6 +4,11 @@ import { getServerSession } from "next-auth";
 import authOptions from "@/app/lib/authOptions";
 import { createSubCategorySchema } from "@/app/lib/validationSchema";
 
+export async function GET() {
+  const subCategories = await prisma.subCategory.findMany();
+  return NextResponse.json(subCategories);
+}
+
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user) {

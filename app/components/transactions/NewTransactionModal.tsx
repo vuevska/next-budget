@@ -20,12 +20,14 @@ type NewTransactionModalProps = Readonly<{
   accountId: number;
   onClose: () => void;
   onAdd: (transaction: Transaction & { subCategory: SubCategory }) => void;
+  subCategories: SubCategory[];
 }>;
 
 export default function NewTransactionModal({
   accountId,
   onClose,
   onAdd,
+  subCategories,
 }: NewTransactionModalProps) {
   const {
     register,
@@ -36,7 +38,6 @@ export default function NewTransactionModal({
   } = useForm<CreateTransactionInput>({
     resolver: zodResolver(createTransactionSchema),
   });
-
 
   const onSubmit = async (data: CreateTransactionInput) => {
     try {
@@ -140,11 +141,12 @@ export default function NewTransactionModal({
                 className="w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
               >
                 <option value="">Select a category...</option>
-                <option value="1">General</option>
+                {subCategories.map((sub) => (
+                  <option key={sub.id} value={sub.id}>
+                    {sub.name}
+                  </option>
+                ))}
               </select>
-              <p className="text-xs text-slate-500 mt-1">
-                Note: Proper category selection coming soon
-              </p>
             </div>
 
             {/* Transaction Type */}

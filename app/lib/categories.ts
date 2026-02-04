@@ -1,3 +1,4 @@
+import { SubCategory } from "@prisma/client";
 import axios from "axios";
 
 export async function createCategory(name: string) {
@@ -43,5 +44,20 @@ export async function persistCategoryOrder(categories: { id: number }[]) {
       );
     }
     throw new Error("Failed to persist category order");
+  }
+}
+
+export async function getSubCategories(): Promise<SubCategory[]> {
+  try {
+    const res = await fetch("/api/subcategories");
+    if (!res.ok) throw new Error("Failed to fetch subcategories");
+    return res.json();
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        error.response?.data?.error || "Failed to fetch subcategories",
+      );
+    }
+    throw new Error("Failed to fetch subcategories");
   }
 }

@@ -7,6 +7,7 @@ import { deleteTransaction, getTransactions } from "@/app/lib/transactions";
 import LoadingTransactions from "./LoadingTransactions";
 import EmptyTransactions from "./EmptyTransactions";
 import TransactionsTable from "./TransactionsTable";
+import { getSubCategories } from "@/app/lib/categories";
 
 type TransactionListViewProps = Readonly<{
   account: AccountType;
@@ -24,6 +25,7 @@ export default function TransactionListView({
   >([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -39,6 +41,19 @@ export default function TransactionListView({
     };
     fetchTransactions();
   }, [account.id]);
+
+useEffect(() => {
+  const fetchSubcategories = async () => {
+    try {
+      const data = await getSubCategories();
+      setSubCategories(data);
+    } catch (err) {
+      console.error("Failed to load subcategories", err);
+    }
+  };
+
+  fetchSubcategories();
+}, []);
 
   const handleAddTransaction = (newTransaction: TransactionWithSubCategory) => {
     setTransactions((prev) => [newTransaction, ...prev]);
@@ -113,6 +128,7 @@ export default function TransactionListView({
           accountId={account.id}
           onClose={() => setIsModalOpen(false)}
           onAdd={handleAddTransaction}
+          subCategories={subCategories}
         />
       )}
     </div>
