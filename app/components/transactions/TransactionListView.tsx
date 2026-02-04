@@ -8,10 +8,12 @@ import LoadingTransactions from "./LoadingTransactions";
 import EmptyTransactions from "./EmptyTransactions";
 import TransactionsTable from "./TransactionsTable";
 import { getSubCategories } from "@/app/lib/categories";
+import FormattedAmount from "../FormattedAmount";
 
 type TransactionListViewProps = Readonly<{
   account: AccountType;
   onBack: () => void;
+  onAccountUpdate: (account: AccountType) => void;
 }>;
 
 type TransactionWithSubCategory = Transaction & { subCategory: SubCategory };
@@ -19,6 +21,7 @@ type TransactionWithSubCategory = Transaction & { subCategory: SubCategory };
 export default function TransactionListView({
   account,
   onBack,
+  onAccountUpdate,
 }: TransactionListViewProps) {
   const [transactions, setTransactions] = useState<
     TransactionWithSubCategory[]
@@ -42,21 +45,32 @@ export default function TransactionListView({
     fetchTransactions();
   }, [account.id]);
 
-useEffect(() => {
-  const fetchSubcategories = async () => {
-    try {
-      const data = await getSubCategories();
-      setSubCategories(data);
-    } catch (err) {
-      console.error("Failed to load subcategories", err);
-    }
-  };
+  useEffect(() => {
+    const fetchSubcategories = async () => {
+      try {
+        const data = await getSubCategories();
+        setSubCategories(data);
+      } catch (err) {
+        console.error("Failed to load subcategories", err);
+      }
+    };
 
-  fetchSubcategories();
-}, []);
+    fetchSubcategories();
+  }, []);
 
   const handleAddTransaction = (newTransaction: TransactionWithSubCategory) => {
     setTransactions((prev) => [newTransaction, ...prev]);
+
+    const amountChange = newTransaction.isInflow
+      ? newTransaction.amount
+      : -newTransaction.amount;
+
+    const updatedAccount = {
+      ...account,
+      amount: account.amount + amountChange,
+    };
+
+    onAccountUpdate(updatedAccount);
   };
 
   const handleDeleteTransaction = async (id: number) => {
@@ -107,7 +121,9 @@ useEffect(() => {
             </Button>
             <div>
               <h1 className="text-3xl font-bold text-white">{account.name}</h1>
-              <p className="text-indigo-100 text-sm mt-1">Account Details</p>
+              <p className="text-indigo-100 text-sm mt-1">
+                Balance: <FormattedAmount amount={account.amount} />
+              </p>
             </div>
           </div>
 

@@ -14,9 +14,10 @@ type LayoutContentProps = Readonly<{
 }>;
 
 export default function LayoutContent({
-  accounts,
+  accounts: initialAccounts,
   categories,
 }: LayoutContentProps) {
+  const [accounts, setAccounts] = useState(initialAccounts);
   const [selectedAccountId, setSelectedAccountId] = useState<number | null>(
     null,
   );
@@ -25,6 +26,12 @@ export default function LayoutContent({
   const selectedAccount = selectedAccountId
     ? accounts.find((a) => a.id === selectedAccountId)
     : null;
+
+  const handleAccountUpdate = (updatedAccount: AccountType) => {
+    setAccounts((prev) =>
+      prev.map((acc) => (acc.id === updatedAccount.id ? updatedAccount : acc)),
+    );
+  };
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -41,6 +48,7 @@ export default function LayoutContent({
           <TransactionListView
             account={selectedAccount}
             onBack={() => setSelectedAccountId(null)}
+            onAccountUpdate={handleAccountUpdate}
           />
         ) : (
           <CategoryList categories={categories} />

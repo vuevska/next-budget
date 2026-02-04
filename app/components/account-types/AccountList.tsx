@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AccountType } from "@prisma/client";
 import { FiPlus } from "react-icons/fi";
 import { Button } from "@radix-ui/themes";
@@ -21,6 +21,10 @@ export default function AccountList({
     id: number;
     name: string;
   } | null>(null);
+
+  useEffect(() => {
+    setAccountsList(accounts);
+  }, [accounts]);
 
   const handleAddAccount = (account: AccountType) => {
     setAccountsList((prev) => [...prev, account]);

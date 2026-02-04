@@ -1,4 +1,4 @@
-import { AccountType, Transaction } from "@prisma/client";
+import { AccountType } from "@prisma/client";
 import axios from "axios";
 import { CreateTransactionInput } from "../components/transactions/NewTransactionModal";
 

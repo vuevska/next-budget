@@ -101,5 +101,17 @@ export async function POST(request: NextRequest) {
     },
   });
 
+  let updatedAmount;
+  if (isInflow) {
+    updatedAmount = account.amount + amount;
+  } else {
+    updatedAmount = account.amount - amount;
+  }
+
+  await prisma.accountType.update({
+    where: { id: accountTypeId },
+    data: { amount: updatedAmount },
+  });
+
   return NextResponse.json(transaction, { status: 201 });
 }
