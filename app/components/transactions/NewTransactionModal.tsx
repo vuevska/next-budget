@@ -1,10 +1,20 @@
 "use client";
 
-import { useState } from "react";
 import { FiX } from "react-icons/fi";
 import { Button } from "@radix-ui/themes";
 import Portal from "../Portal";
 import { Transaction, SubCategory } from "@prisma/client";
+import { Label } from "@radix-ui/themes/components/context-menu";
+import z from "zod";
+import { createTransactionSchema } from "@/app/lib/validationSchema";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import ErrorMessage from "../ErrorMessage";
+import { createTransaction } from "@/app/lib/transactions";
+
+export type CreateTransactionInput = z.infer<typeof createTransactionSchema> & {
+  accountId: number;
+};
 
 type NewTransactionModalProps = Readonly<{
   accountId: number;
@@ -17,57 +27,32 @@ export default function NewTransactionModal({
   onClose,
   onAdd,
 }: NewTransactionModalProps) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [formData, setFormData] = useState({
-    amount: "",
-    description: "",
-    payee: "",
-    isInflow: false,
-    subCatId: "",
-    date: new Date().toISOString().split("T")[0],
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm<CreateTransactionInput>({
+    resolver: zodResolver(createTransactionSchema),
   });
-  const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
-  const [loadingSubCats, setLoadingSubCats] = useState(false);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
-    const { name, value, type } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]:
-        type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
-    }));
-  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-
+  const onSubmit = async (data: CreateTransactionInput) => {
     try {
-      const response = await fetch("/api/transactions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          amount: parseFloat(formData.amount),
-          subCatId: parseInt(formData.subCatId),
-          accountTypeId: accountId,
-          date: new Date(formData.date),
-        }),
-      });
+      const payload = {
+        ...data,
+        accountTypeId: accountId,
+      };
+      const created = await createTransaction(payload);
 
-      if (!response.ok) throw new Error("Failed to create transaction");
-
-      const newTransaction = await response.json();
-      onAdd(newTransaction);
+      onAdd(created);
       onClose();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
-      setLoading(false);
+    } catch (err: any) {
+      setError("root", {
+        type: "manual",
+        message: err?.message || "Unexpected error",
+      });
     }
   };
 
@@ -89,87 +74,69 @@ export default function NewTransactionModal({
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="p-6 space-y-4">
-            {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                {error}
-              </div>
-            )}
-
+          <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
             {/* Amount */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <Label className="block text-sm font-medium text-slate-700 mb-2">
                 Amount
-              </label>
+              </Label>
+              <ErrorMessage>{errors.amount?.message}</ErrorMessage>
+
               <input
                 type="number"
-                name="amount"
-                value={formData.amount}
-                onChange={handleInputChange}
-                placeholder="0.00"
+                placeholder="0.00 мкд"
+                {...register("amount", { valueAsNumber: true })}
                 step="0.01"
-                required
                 className="w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
               />
             </div>
 
             {/* Payee */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <Label className="block text-sm font-medium text-slate-700 mb-2">
                 Payee
-              </label>
+              </Label>
+              <ErrorMessage>{errors.payee?.message}</ErrorMessage>
               <input
                 type="text"
-                name="payee"
-                value={formData.payee}
-                onChange={handleInputChange}
+                {...register("payee")}
                 placeholder="e.g., Coffee Shop"
-                required
                 className="w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
               />
             </div>
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <Label className="block text-sm font-medium text-slate-700 mb-2">
                 Description
-              </label>
+              </Label>
               <input
                 type="text"
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
+                {...register("description")}
                 placeholder="e.g., Morning coffee"
-                required
                 className="w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
               />
             </div>
 
             {/* Date */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <Label className="block text-sm font-medium text-slate-700 mb-2">
                 Date
-              </label>
+              </Label>
               <input
                 type="date"
-                name="date"
-                value={formData.date}
-                onChange={handleInputChange}
-                required
+                {...register("date", { valueAsDate: true })}
                 className="w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
               />
             </div>
 
             {/* SubCategory */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <Label className="block text-sm font-medium text-slate-700 mb-2">
                 Category
-              </label>
+              </Label>
               <select
-                name="subCatId"
-                value={formData.subCatId}
-                onChange={handleInputChange}
-                required
+                {...register("subCatId", { valueAsNumber: true })}
                 className="w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
               >
                 <option value="">Select a category...</option>
@@ -182,21 +149,16 @@ export default function NewTransactionModal({
 
             {/* Transaction Type */}
             <div className="flex items-center gap-3">
-              <label className="flex items-center gap-2 cursor-pointer">
+              <Label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
-                  name="isInflow"
-                  checked={formData.isInflow}
-                  onChange={handleInputChange}
+                  {...register("isInflow")}
                   className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                 />
                 <span className="text-sm font-medium text-slate-700">
-                  Is Inflow?
+                  Inflow
                 </span>
-              </label>
-              <span className="text-xs text-slate-600">
-                {formData.isInflow ? "(Income)" : "(Expense)"}
-              </span>
+              </Label>
             </div>
 
             {/* Buttons */}
@@ -204,17 +166,17 @@ export default function NewTransactionModal({
               <Button
                 type="button"
                 onClick={onClose}
-                disabled={loading}
+                disabled={isSubmitting}
                 className="flex-1 px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-900 rounded-lg font-medium transition-colors disabled:opacity-50"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                disabled={loading}
+                disabled={isSubmitting}
                 className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
               >
-                {loading ? "Creating..." : "Create"}
+                {isSubmitting ? "Creating..." : "Create"}
               </Button>
             </div>
           </form>

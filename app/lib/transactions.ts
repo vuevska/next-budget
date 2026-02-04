@@ -1,5 +1,6 @@
-import { AccountType } from "@prisma/client";
+import { AccountType, Transaction } from "@prisma/client";
 import axios from "axios";
+import { CreateTransactionInput } from "../components/transactions/NewTransactionModal";
 
 export async function getTransactions(account: AccountType) {
   try {
@@ -23,7 +24,26 @@ export async function deleteTransaction(id: number) {
     const res = await axios.delete(`/api/transactions/${id}`);
     return res;
   } catch (error) {
-    console.error("Error deleting transaction:", error);
-    alert("Failed to delete transaction");
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        error.response?.data?.message || "Failed to delete transaction",
+      );
+    }
+    throw new Error("Failed to delete transaction");
+  }
+}
+
+export async function createTransaction(data: CreateTransactionInput) {
+  try {
+    console.log("here service");
+    const res = await axios.post("/api/transactions", data);
+    return res.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        error.response?.data?.error || "Failed to create transaction",
+      );
+    }
+    throw new Error("Failed to create transaction");
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import authOptions from "@/app/lib/authOptions";
 import prisma from "@/prisma/client";
+import { createTransactionSchema } from "@/app/lib/validationSchema";
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -55,6 +56,10 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
+  const validation = createTransactionSchema.safeParse(body);
+  if (!validation.success)
+    return NextResponse.json(validation.error.format(), { status: 400 });
+
   const {
     amount,
     description,
@@ -64,21 +69,6 @@ export async function POST(request: NextRequest) {
     accountTypeId,
     date,
   } = body;
-
-  if (
-    !amount ||
-    !description ||
-    !payee ||
-    isInflow === undefined ||
-    !subCatId ||
-    !accountTypeId ||
-    !date
-  ) {
-    return NextResponse.json(
-      { error: "Missing required fields" },
-      { status: 400 },
-    );
-  }
 
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
