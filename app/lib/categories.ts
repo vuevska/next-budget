@@ -61,3 +61,17 @@ export async function getSubCategories(): Promise<SubCategory[]> {
     throw new Error("Failed to fetch subcategories");
   }
 }
+
+export async function getToBeBudgeted(): Promise<number> {
+  try {
+    const res = await axios.get("/api/transactions/to-be-budgeted");
+    return res.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        error.response?.data?.error || "Failed to fetch to-be-budgeted amount",
+      );
+    }
+    throw new Error("Failed to fetch to-be-budgeted amount");
+  }
+}

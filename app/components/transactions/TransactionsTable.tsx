@@ -59,7 +59,9 @@ const TransactionsTable = ({
                 </td>
                 <td className="px-6 py-3 text-slate-600">
                   <span className="inline-block px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-medium">
-                    {transaction.subCategory.name}
+                    {transaction.subCategory
+                      ? transaction.subCategory.name
+                      : "To be Budgeted"}
                   </span>
                 </td>
                 <td className="px-6 py-3 text-right font-semibold">

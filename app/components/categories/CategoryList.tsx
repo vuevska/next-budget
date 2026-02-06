@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Category, SubCategory } from "@prisma/client";
 import { IoMdAdd } from "react-icons/io";
 import { FaWallet } from "react-icons/fa";
@@ -20,8 +20,9 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import AddCategoryForm from "./AddCategoryForm";
-import { persistCategoryOrder } from "@/app/lib/categories";
+import { persistCategoryOrder, getToBeBudgeted } from "@/app/lib/categories";
 import { SortableCategoryItem } from "./SortableCategoryItem";
+import FormattedAmount from "../FormattedAmount";
 
 type CategoryListProps = Readonly<{
   categories: (Category & { SubCategory: SubCategory[] })[];
@@ -37,6 +38,7 @@ export default function CategoryList({
   const [expandedAddSubCategory, setExpandedAddSubCategory] = useState<
     number | null
   >(null);
+  const [toBeBudgeted, setToBeBudgeted] = useState(0);
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -47,6 +49,19 @@ export default function CategoryList({
       coordinateGetter: sortableKeyboardCoordinates,
     }),
   );
+
+  useEffect(() => {
+    const fetchToBeBudgeted = async () => {
+      try {
+        const amount = await getToBeBudgeted();
+        setToBeBudgeted(amount);
+      } catch (error) {
+        console.error("Failed to fetch to-be-budgeted amount:", error);
+      }
+    };
+
+    fetchToBeBudgeted();
+  }, []);
 
   const handleAddCategory = (
     newCategory: Category & { SubCategory: SubCategory[] },
@@ -103,16 +118,28 @@ export default function CategoryList({
               Manage and organize your spending categories
             </p>
           </div>
-          <button
-            onClick={() => setShowAddCategory(!showAddCategory)}
-            className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl font-medium text-sm group"
-          >
-            <IoMdAdd
-              size={18}
-              className="group-hover:rotate-90 transition-transform"
-            />
-            New Category
-          </button>
+          <div className="flex items-center gap-6">
+            {toBeBudgeted > 0 && (
+              <div className="bg-white rounded-xl border-2 border-green-200 p-4 shadow-sm">
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">
+                  To be Budgeted
+                </p>
+                <p className="text-2xl font-bold text-green-600">
+                  <FormattedAmount amount={toBeBudgeted} />
+                </p>
+              </div>
+            )}
+            <button
+              onClick={() => setShowAddCategory(!showAddCategory)}
+              className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl font-medium text-sm group"
+            >
+              <IoMdAdd
+                size={18}
+                className="group-hover:rotate-90 transition-transform"
+              />
+              New Category
+            </button>
+          </div>
         </div>
       </div>
 

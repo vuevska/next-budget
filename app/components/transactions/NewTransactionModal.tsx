@@ -11,6 +11,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import ErrorMessage from "../ErrorMessage";
 import { createTransaction } from "@/app/lib/transactions";
+import { useEffect, useState } from "react";
 
 export type CreateTransactionInput = z.infer<typeof createTransactionSchema> & {
   accountId: number;
@@ -33,11 +34,20 @@ export default function NewTransactionModal({
     register,
     handleSubmit,
     setError,
+    setValue,
     formState: { errors, isSubmitting },
     reset,
   } = useForm<CreateTransactionInput>({
     resolver: zodResolver(createTransactionSchema),
   });
+
+  const [isInflow, setIsInflow] = useState(false);
+
+  useEffect(() => {
+    if (isInflow) {
+      setValue("subCatId", null);
+    }
+  }, [isInflow, setValue]);
 
   const onSubmit = async (data: CreateTransactionInput) => {
     try {
@@ -76,11 +86,26 @@ export default function NewTransactionModal({
 
           {/* Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
-            {/* Amount */}
+            {/* Amount and Inflow */}
             <div>
-              <Label className="block text-sm font-medium text-slate-700 mb-2">
-                Amount
-              </Label>
+              <div className="flex items-end gap-3 mb-2">
+                <div className="flex-1">
+                  <Label className="block text-sm font-medium text-slate-700 mb-2">
+                    Amount
+                  </Label>
+                </div>
+                <Label className="flex items-center gap-2 cursor-pointer pb-1">
+                  <input
+                    type="checkbox"
+                    {...register("isInflow")}
+                    onChange={(e) => setIsInflow(e.target.checked)}
+                    className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <span className="text-sm font-medium text-slate-700">
+                    Inflow
+                  </span>
+                </Label>
+              </div>
               <ErrorMessage>{errors.amount?.message}</ErrorMessage>
 
               <input
@@ -132,36 +157,18 @@ export default function NewTransactionModal({
             </div>
 
             {/* SubCategory */}
-            <div>
-              <Label className="block text-sm font-medium text-slate-700 mb-2">
-                Category
-              </Label>
-              <select
-                {...register("subCatId", { valueAsNumber: true })}
-                className="w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
-              >
-                <option value="">Select a category...</option>
-                {subCategories.map((sub) => (
-                  <option key={sub.id} value={sub.id}>
-                    {sub.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Transaction Type */}
-            <div className="flex items-center gap-3">
-              <Label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  {...register("isInflow")}
-                  className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                />
-                <span className="text-sm font-medium text-slate-700">
-                  Inflow
-                </span>
-              </Label>
-            </div>
+            <select
+              {...register("subCatId", { valueAsNumber: true })}
+              disabled={isInflow}
+              className="w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+            >
+              <option value="">Select a category...</option>
+              {subCategories.map((sub) => (
+                <option key={sub.id} value={sub.id}>
+                  {sub.name}
+                </option>
+              ))}
+            </select>
 
             {/* Buttons */}
             <div className="flex gap-3 pt-4">

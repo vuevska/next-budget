@@ -35,7 +35,6 @@ export async function deleteTransaction(id: number) {
 
 export async function createTransaction(data: CreateTransactionInput) {
   try {
-    console.log("here service");
     const res = await axios.post("/api/transactions", data);
     return res.data;
   } catch (error) {

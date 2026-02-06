@@ -101,9 +101,20 @@ export async function POST(request: NextRequest) {
     },
   });
 
+  const toBudget = await prisma.toBudget.findUnique({
+    where: {
+      periodId_userId: {
+        periodId: 2,
+        userId: user.id,
+      },
+    },
+  });
+
   let updatedAmount;
+  let updatedToBudgetAmount;
   if (isInflow) {
     updatedAmount = account.amount + amount;
+    updatedToBudgetAmount = toBudget.amount + amount;
   } else {
     updatedAmount = account.amount - amount;
   }
@@ -111,6 +122,17 @@ export async function POST(request: NextRequest) {
   await prisma.accountType.update({
     where: { id: accountTypeId },
     data: { amount: updatedAmount },
+  });
+
+  //TODO CHANGE TO ACTUAL PERIOD
+  await prisma.toBudget.update({
+    where: {
+      periodId_userId: {
+        periodId: 2,
+        userId: user.id,
+      },
+    },
+    data: { amount: updatedToBudgetAmount },
   });
 
   return NextResponse.json(transaction, { status: 201 });

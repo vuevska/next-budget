@@ -53,6 +53,7 @@ model User {
   sessions      Session[]
   AccountType   AccountType[]
   Category      Category[]
+  ToBudget      ToBudget[]
 }
 
 model VerificationToken {
@@ -82,14 +83,42 @@ model SubCategory {
 }
 
 model Transaction {
-  id            Int         @id @default(autoincrement())
-  amount        Float       @db.Double
+  id            Int          @id @default(autoincrement())
+  amount        Float        @db.Double
   isInflow      Boolean
-  description   String      @db.VarChar(255)
-  payee         String      @db.VarChar(255)
-  date          DateTime    @default(now())
-  subCatId      Int
-  subCategory   SubCategory @relation(fields: [subCatId], references: [id])
+  description   String       @db.VarChar(255)
+  payee         String       @db.VarChar(255)
+  date          DateTime     @default(now())
+  subCatId      Int?
+  subCategory   SubCategory? @relation(fields: [subCatId], references: [id])
   accountTypeId Int
-  accountType   AccountType @relation(fields: [accountTypeId], references: [id])
+  accountType   AccountType  @relation(fields: [accountTypeId], references: [id])
+}
+
+model Period {
+  id        Int      @id @default(autoincrement())
+  month     Int
+  year      Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  toBudget ToBudget[]
+
+  @@unique([month, year])
+  @@index([month, year])
+}
+
+model ToBudget {
+  id        Int      @id @default(autoincrement())
+  periodId  Int
+  userId    String
+  amount    Float    @db.Double
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  period Period @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([periodId, userId])
+  @@index([userId, periodId])
 }
