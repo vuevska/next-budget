@@ -5,7 +5,28 @@ import authOptions from "@/app/lib/authOptions";
 import { createSubCategorySchema } from "@/app/lib/validationSchema";
 
 export async function GET() {
-  const subCategories = await prisma.subCategory.findMany();
+  const session = await getServerSession(authOptions);
+  if (!session?.user) {
+    return NextResponse.json({}, { status: 401 });
+  }
+  const email = session.user.email;
+  if (!email) {
+    return NextResponse.json(
+      { success: false, error: "Unauthorized" },
+      { status: 401 },
+    );
+  }
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  const subCategories = await prisma.subCategory.findMany({
+    where: {
+      category: {
+        userId: user?.id,
+      },
+    },
+  });
   return NextResponse.json(subCategories);
 }
 
