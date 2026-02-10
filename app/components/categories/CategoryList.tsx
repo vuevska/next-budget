@@ -27,10 +27,12 @@ import {
 } from "@dnd-kit/sortable";
 import AddCategoryForm from "./AddCategoryForm";
 import { persistCategoryOrder, getToBeBudgeted } from "@/app/lib/categories";
+import { moveBudgetedAmount } from "@/app/lib/moveBudget";
 import { SortableCategoryItem } from "./SortableCategoryItem";
 import FormattedAmount from "../FormattedAmount";
 import ToBudgetModal from "../budget/ToBudgetModal";
 import { Button } from "@radix-ui/themes";
+import MoveBudgetModal from "./MoveBudgetModal";
 
 type SubCategoryWithBudgeted = SubCategory & { budgeted: number };
 
@@ -52,6 +54,14 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
     >(null);
     const [toBeBudgeted, setToBeBudgeted] = useState(0);
     const [showBudgetModal, setShowBudgetModal] = useState(false);
+    const [showMoveBudgetModal, setShowMoveBudgetModal] = useState(false);
+    const [moveFromSubCategoryId, setMoveFromSubCategoryId] = useState<
+      number | null
+    >(null);
+    const handleBudgetedClick = (subCategory: SubCategory) => {
+      setMoveFromSubCategoryId(subCategory.id);
+      setShowMoveBudgetModal(true);
+    };
     const sensors = useSensors(
       useSensor(PointerSensor, {
         activationConstraint: {
@@ -152,6 +162,49 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
       }
     };
 
+    const moveBudget = async (
+      amount: number,
+      fromSubCategoryId: number,
+      toSubCategoryId: number,
+    ) => {
+      let result = null;
+      let error = null;
+      try {
+        result = await moveBudgetedAmount(
+          amount,
+          fromSubCategoryId,
+          toSubCategoryId,
+        );
+      } catch (err) {
+        error = err;
+      }
+      if (result) {
+        setCategoryList((prev) =>
+          prev.map((cat) => {
+            return {
+              ...cat,
+              SubCategory: cat.SubCategory.map((subCat) => {
+                if (subCat.id === result.fromSubCategory.id) {
+                  return {
+                    ...subCat,
+                    budgeted: result.fromSubCategory.budgeted,
+                  };
+                }
+                if (subCat.id === result.toSubCategory.id) {
+                  return {
+                    ...subCat,
+                    budgeted: result.toSubCategory.budgeted,
+                  };
+                }
+                return subCat;
+              }),
+            };
+          }),
+        );
+      }
+      setShowMoveBudgetModal(false);
+    };
+
     return (
       <div className="w-full min-h-full bg-gradient-to-br from-slate-50 via-white to-slate-50 p-8">
         {/* Header Section */}
@@ -241,9 +294,19 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
                       )
                     }
                     onAddSubCategory={handleAddSubCategory}
-                    onAccountClick={onAccountClick}
+                    onBudgetedClick={handleBudgetedClick}
                   />
                 ))}
+                {/* Move Budget Modal */}
+                {showMoveBudgetModal && moveFromSubCategoryId !== null && (
+                  <MoveBudgetModal
+                    isOpen={showMoveBudgetModal}
+                    onClose={() => setShowMoveBudgetModal(false)}
+                    categories={categoryList}
+                    defaultFromSubCategoryId={moveFromSubCategoryId}
+                    onMove={moveBudget}
+                  />
+                )}
               </div>
             </SortableContext>
           </DndContext>

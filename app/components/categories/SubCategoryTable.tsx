@@ -5,10 +5,12 @@ import { SubCategory } from "@prisma/client";
 
 type SubCategoryTableProps = Readonly<{
   subCategories: SubCategory[];
+  onBudgetedClick?: (subCategory: SubCategory) => void;
 }>;
 
 export default function SubCategoryTable({
   subCategories,
+  onBudgetedClick,
 }: SubCategoryTableProps) {
   return (
     <div className="overflow-x-auto">
@@ -51,9 +53,17 @@ export default function SubCategoryTable({
                 </td>
 
                 <td className="px-4 py-2 text-right">
-                  <span className="font-medium text-slate-700">
+                  <button
+                    type="button"
+                    className="font-medium text-slate-700 hover:text-indigo-600 focus:outline-none focus:underline"
+                    onClick={
+                      onBudgetedClick
+                        ? () => onBudgetedClick(subCategory)
+                        : undefined
+                    }
+                  >
                     {formatMKD(subCategory.budgeted)}
-                  </span>
+                  </button>
                 </td>
 
                 <td className="px-4 py-2 text-right">

@@ -12,13 +12,14 @@ export function SortableCategoryItem({
   expandedAddSubCategory,
   onToggleAddSubCategory,
   onAddSubCategory,
-  onAccountClick,
+  onBudgetedClick,
 }: Readonly<{
   category: Category & { SubCategory: SubCategory[] };
   expandedAddSubCategory: number | null;
   onToggleAddSubCategory: (categoryId: number) => void;
   onAddSubCategory: (categoryId: number, subCategory: SubCategory) => void;
   onAccountClick?: (id: number) => void;
+  onBudgetedClick?: (subCategory: SubCategory) => void;
 }>) {
   const {
     attributes,
@@ -95,7 +96,7 @@ export function SortableCategoryItem({
         ) : (
           <SubCategoryTable
             subCategories={category.SubCategory}
-            onAccountClick={onAccountClick}
+            onBudgetedClick={onBudgetedClick}
           />
         )}
       </div>

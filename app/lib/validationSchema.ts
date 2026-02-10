@@ -39,3 +39,9 @@ export const budgetAmountInput = z.object({
   categoryId: z.number().int("Category is required."),
   subCategoryId: z.number().int("Subcategory is required."),
 });
+
+export const moveBudgetSchema = z.object({
+  amount: z.number().gt(0, "Amount must be greater than 0"),
+  fromSubCategoryId: z.number(),
+  toSubCategoryId: z.number(),
+});
