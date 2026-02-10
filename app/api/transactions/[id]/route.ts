@@ -55,9 +55,25 @@ export async function DELETE(
     where: { id: transactionId },
   });
 
+  //TODO: change to current period
+  const toBudget = await prisma.toBudget.findUnique({
+    where: {
+      periodId_userId: {
+        periodId: 2,
+        userId: user.id,
+      },
+    },
+  });
+
+  if (!toBudget) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  }
+
   let updatedAmount;
+  let updatedToBudgetAmount;
   if (transaction.isInflow) {
     updatedAmount = account.amount - transaction.amount;
+    updatedToBudgetAmount = toBudget.amount - transaction.amount;
   } else {
     updatedAmount = account.amount + transaction.amount;
   }
@@ -65,6 +81,17 @@ export async function DELETE(
   await prisma.accountType.update({
     where: { id: transaction.accountTypeId },
     data: { amount: updatedAmount },
+  });
+
+  //TODO CHANGE TO ACTUAL PERIOD
+  await prisma.toBudget.update({
+    where: {
+      periodId_userId: {
+        periodId: 2,
+        userId: user.id,
+      },
+    },
+    data: { amount: updatedToBudgetAmount },
   });
 
   return NextResponse.json({ success: true });
