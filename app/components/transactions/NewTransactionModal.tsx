@@ -87,12 +87,12 @@ export default function NewTransactionModal({
             <h2 className="text-xl font-bold text-slate-900">
               New Transaction
             </h2>
-            <button
+            <Button
               onClick={onClose}
               className="p-1 hover:bg-slate-200 rounded-lg transition-colors"
             >
               <FiX size={24} className="text-slate-600" />
-            </button>
+            </Button>
           </div>
 
           {/* Form */}

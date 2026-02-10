@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { AccountType, Category } from "@prisma/client";
-import CategoryList from "./categories/CategoryList";
+import CategoryList, { type CategoryListRef } from "./categories/CategoryList";
 import TransactionListView from "./transactions/TransactionListView";
 import { useSession } from "next-auth/react";
 import SidePanelWrapper from "./SidePanelWrapper";
@@ -23,6 +23,7 @@ export default function LayoutContent({
     null,
   );
   const { data: session } = useSession();
+  const categoryListRef = useRef<CategoryListRef>(null);
 
   const selectedAccount = selectedAccountId
     ? accounts.find((a) => a.id === selectedAccountId)
@@ -32,6 +33,12 @@ export default function LayoutContent({
     setAccounts((prev) =>
       prev.map((acc) => (acc.id === updatedAccount.id ? updatedAccount : acc)),
     );
+  };
+
+  const handleAccountCreate = (newAccount: AccountType) => {
+    setAccounts((prev) => [...prev, newAccount]);
+    // Refresh the to-be-budgeted amount in CategoryList
+    categoryListRef.current?.refreshToBudgeted();
   };
 
   const handleCategoriesUpdate = (
@@ -47,6 +54,7 @@ export default function LayoutContent({
           accounts={accounts}
           user={session?.user}
           onSelectAccount={setSelectedAccountId}
+          onAccountCreate={handleAccountCreate}
         />
       </SidePanelWrapper>
 
@@ -59,7 +67,10 @@ export default function LayoutContent({
             onCategoriesUpdate={handleCategoriesUpdate}
           />
         ) : (
-          <CategoryList categories={categories} />
+          <CategoryList
+            ref={categoryListRef}
+            categories={categories}
+          />
         )}
       </main>
     </div>

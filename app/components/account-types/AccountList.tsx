@@ -9,11 +9,13 @@ import EditAccountModal from "./EditAccountModal";
 type AccountListProps = Readonly<{
   accounts: AccountType[];
   onAccountClick?: (id: number) => void;
+  onAccountCreate?: (account: AccountType) => void;
 }>;
 
 export default function AccountList({
   accounts,
   onAccountClick,
+  onAccountCreate,
 }: AccountListProps) {
   const [accountsList, setAccountsList] = useState(accounts);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -28,6 +30,7 @@ export default function AccountList({
 
   const handleAddAccount = (account: AccountType) => {
     setAccountsList((prev) => [...prev, account]);
+    onAccountCreate?.(account);
   };
 
   const handleEditAccount = (updated: AccountType) => {

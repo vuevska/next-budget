@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { AccountType, Transaction, SubCategory } from "@prisma/client";
-import { FiArrowLeft, FiPlus } from "react-icons/fi";
+import { FiArrowLeft } from "react-icons/fi";
 import { Button } from "@radix-ui/themes";
 import NewTransactionModal from "./NewTransactionModal";
 import { deleteTransaction, getTransactions } from "@/app/lib/transactions";
@@ -10,6 +10,7 @@ import TransactionsTable from "./TransactionsTable";
 import { getSubCategories } from "@/app/lib/categories";
 import FormattedAmount from "../FormattedAmount";
 import DeleteTransactionModal from "./DeleteTransactionModal";
+import { IoMdAdd } from "react-icons/io";
 
 type TransactionListViewProps = Readonly<{
   account: AccountType;
@@ -134,8 +135,8 @@ export default function TransactionListView({
 
   return (
     <div className="w-full h-full flex flex-col">
-      <div className="bg-slate-500 border-b border-slate-600 p-6 shadow-lg">
-        <div className="flex items-center justify-between mb-4">
+      <div className="bg-slate-500 border-b border-slate-600 p-8 shadow-lg mb-8">
+        <div className="flex items-center justify-between mb-2 mt-2">
           <div className="flex items-center gap-3">
             <Button
               onClick={onBack}
@@ -154,10 +155,13 @@ export default function TransactionListView({
 
           <Button
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-600 hover:to-indigo-800 transition-all text-white rounded-lg font-medium shadow-lg"
+            className="flex items-center gap-2 px-5 mt-4 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-600 hover:to-indigo-800 transition-all text-white rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl font-medium text-sm group"
           >
-            <FiPlus size={20} />
-            <span>New Transaction</span>
+            <IoMdAdd
+              size={18}
+              className="group-hover:rotate-90 transition-transform"
+            />
+            New Transaction
           </Button>
         </div>
       </div>
