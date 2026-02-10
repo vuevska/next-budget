@@ -15,9 +15,10 @@ type LayoutContentProps = Readonly<{
 
 export default function LayoutContent({
   accounts: initialAccounts,
-  categories,
+  categories: initialCategories,
 }: LayoutContentProps) {
   const [accounts, setAccounts] = useState(initialAccounts);
+  const [categories, setCategories] = useState(initialCategories);
   const [selectedAccountId, setSelectedAccountId] = useState<number | null>(
     null,
   );
@@ -31,6 +32,12 @@ export default function LayoutContent({
     setAccounts((prev) =>
       prev.map((acc) => (acc.id === updatedAccount.id ? updatedAccount : acc)),
     );
+  };
+
+  const handleCategoriesUpdate = (
+    updatedCategories: (Category & { SubCategory: any[] })[],
+  ) => {
+    setCategories(updatedCategories);
   };
 
   return (
@@ -49,6 +56,7 @@ export default function LayoutContent({
             account={selectedAccount}
             onBack={() => setSelectedAccountId(null)}
             onAccountUpdate={handleAccountUpdate}
+            onCategoriesUpdate={handleCategoriesUpdate}
           />
         ) : (
           <CategoryList categories={categories} />

@@ -1,4 +1,3 @@
-import { SubCategory } from "@prisma/client";
 import axios from "axios";
 
 export async function createCategory(name: string) {
@@ -47,11 +46,10 @@ export async function persistCategoryOrder(categories: { id: number }[]) {
   }
 }
 
-export async function getSubCategories(): Promise<SubCategory[]> {
+export async function getSubCategories() {
   try {
-    const res = await fetch("/api/subcategories");
-    if (!res.ok) throw new Error("Failed to fetch subcategories");
-    return res.json();
+    const res = await axios.get("/api/subcategories");
+    return res.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
       throw new Error(
@@ -62,7 +60,21 @@ export async function getSubCategories(): Promise<SubCategory[]> {
   }
 }
 
-export async function getToBeBudgeted(): Promise<number> {
+export async function getCategories() {
+  try {
+    const response = await axios.get("/api/categories");
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        error.response?.data?.error || "Failed to fetch categories",
+      );
+    }
+    throw new Error("Failed to fetch categories");
+  }
+}
+
+export async function getToBeBudgeted() {
   try {
     const res = await axios.get("/api/transactions/to-be-budgeted");
     return res.data;
@@ -73,5 +85,22 @@ export async function getToBeBudgeted(): Promise<number> {
       );
     }
     throw new Error("Failed to fetch to-be-budgeted amount");
+  }
+}
+
+export async function allocateBudget(amount: number, subCategoryId: number) {
+  try {
+    const res = await axios.post("/api/budget/allocate", {
+      amount,
+      subCategoryId,
+    });
+    return res.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        error.response?.data?.error || "Failed to allocate budget",
+      );
+    }
+    throw new Error("Failed to allocate budget");
   }
 }

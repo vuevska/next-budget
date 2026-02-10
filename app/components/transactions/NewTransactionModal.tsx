@@ -12,6 +12,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import ErrorMessage from "../ErrorMessage";
 import { createTransaction } from "@/app/lib/transactions";
 import { useEffect, useState } from "react";
+import { getCategories } from "@/app/lib/categories";
 
 export type CreateTransactionInput = z.infer<typeof createTransactionSchema> & {
   accountId: number;
@@ -22,6 +23,7 @@ type NewTransactionModalProps = Readonly<{
   onClose: () => void;
   onAdd: (transaction: Transaction & { subCategory: SubCategory }) => void;
   subCategories: SubCategory[];
+  onCategoriesUpdate?: (categories: any[]) => void;
 }>;
 
 export default function NewTransactionModal({
@@ -29,6 +31,7 @@ export default function NewTransactionModal({
   onClose,
   onAdd,
   subCategories,
+  onCategoriesUpdate,
 }: NewTransactionModalProps) {
   const {
     register,
@@ -58,6 +61,14 @@ export default function NewTransactionModal({
       const created = await createTransaction(payload);
 
       onAdd(created);
+
+      // If it's an expense transaction with a subcategory, refresh categories
+      if (!data.isInflow && data.subCatId && onCategoriesUpdate) {
+        const updatedCategories = await getCategories();
+        onCategoriesUpdate(updatedCategories);
+      }
+
+      reset();
       onClose();
     } catch (err: any) {
       setError("root", {

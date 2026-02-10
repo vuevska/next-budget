@@ -32,7 +32,7 @@ export default function SubCategoryTable({
 
         <tbody className="divide-y divide-slate-200">
           {subCategories.map((subCategory) => {
-            const spent = 0;
+            const spent = subCategory.spent || 0;
             const left = subCategory.budgeted - spent;
             const percentSpent = (spent / subCategory.budgeted) * 100 || 0;
 
@@ -67,7 +67,7 @@ export default function SubCategoryTable({
                       />
                     </div>
                     <span className="font-medium text-rose-600 text-xs min-w-[48px] text-right">
-                      {formatMKD(0.0)}
+                      {formatMKD(spent)}
                     </span>
                   </div>
                 </td>

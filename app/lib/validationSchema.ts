@@ -33,3 +33,9 @@ export const createTransactionSchema = z
     message: "Subcategory is required for outflows",
     path: ["subCatId"],
   });
+
+export const budgetAmountInput = z.object({
+  amount: z.number().gt(-1, "Amount must be a positive number."),
+  categoryId: z.number().int("Category is required."),
+  subCategoryId: z.number().int("Subcategory is required."),
+});

@@ -77,6 +77,7 @@ model SubCategory {
   id          Int           @id @default(autoincrement())
   name        String        @db.VarChar(255)
   budgeted    Float         @db.Double
+  spent       Float         @default(0) @db.Double
   catId       Int
   category    Category      @relation(fields: [catId], references: [id])
   Transaction Transaction[]

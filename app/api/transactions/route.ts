@@ -101,6 +101,18 @@ export async function POST(request: NextRequest) {
     },
   });
 
+  // Update subcategory spent amount if it's an expense (not inflow) and has a subcategory
+  if (!isInflow && subCatId) {
+    await prisma.subCategory.update({
+      where: { id: subCatId },
+      data: {
+        spent: {
+          increment: amount,
+        },
+      },
+    });
+  }
+
   const toBudget = await prisma.toBudget.findUnique({
     where: {
       periodId_userId: {

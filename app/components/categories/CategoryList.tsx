@@ -23,6 +23,9 @@ import AddCategoryForm from "./AddCategoryForm";
 import { persistCategoryOrder, getToBeBudgeted } from "@/app/lib/categories";
 import { SortableCategoryItem } from "./SortableCategoryItem";
 import FormattedAmount from "../FormattedAmount";
+import ToBudgetModal from "../budget/ToBudgetModal";
+
+type SubCategoryWithBudgeted = SubCategory & { budgeted: number };
 
 type CategoryListProps = Readonly<{
   categories: (Category & { SubCategory: SubCategory[] })[];
@@ -39,6 +42,7 @@ export default function CategoryList({
     number | null
   >(null);
   const [toBeBudgeted, setToBeBudgeted] = useState(0);
+  const [showBudgetModal, setShowBudgetModal] = useState(false);
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -102,6 +106,32 @@ export default function CategoryList({
     }, 200);
   };
 
+  const handleBudgetSuccess = async (
+    allocatedAmount: number,
+    updatedSubCategory?: SubCategoryWithBudgeted,
+  ) => {
+    try {
+      const newAmount = await getToBeBudgeted();
+      setToBeBudgeted(newAmount);
+
+      // Refresh the subcategory budgeted amount in the UI
+      if (updatedSubCategory) {
+        setCategoryList(
+          categoryList.map((cat) => ({
+            ...cat,
+            SubCategory: cat.SubCategory.map((subCat) =>
+              subCat.id === updatedSubCategory.id
+                ? { ...subCat, budgeted: updatedSubCategory.budgeted }
+                : subCat,
+            ),
+          })),
+        );
+      }
+    } catch (error) {
+      console.error("Failed to refresh budget amounts:", error);
+    }
+  };
+
   return (
     <div className="w-full min-h-full bg-gradient-to-br from-slate-50 via-white to-slate-50 p-8">
       {/* Header Section */}
@@ -120,14 +150,17 @@ export default function CategoryList({
           </div>
           <div className="flex items-center gap-6">
             {toBeBudgeted > 0 && (
-              <div className="bg-white rounded-xl border-2 border-green-200 p-4 shadow-sm">
-                <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">
+              <button
+                onClick={() => setShowBudgetModal(true)}
+                className="bg-white rounded-xl border-2 border-green-200 p-4 shadow-sm hover:shadow-md hover:border-green-300 transition-all duration-200 cursor-pointer group"
+              >
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1 group-hover:text-green-600 transition-colors">
                   To be Budgeted
                 </p>
-                <p className="text-2xl font-bold text-green-600">
+                <p className="text-2xl font-bold text-green-600 group-hover:scale-105 transition-transform origin-left">
                   <FormattedAmount amount={toBeBudgeted} />
                 </p>
-              </div>
+              </button>
             )}
             <button
               onClick={() => setShowAddCategory(!showAddCategory)}
@@ -202,6 +235,15 @@ export default function CategoryList({
           </SortableContext>
         </DndContext>
       )}
+
+      {/* Budget Allocation Modal */}
+      <ToBudgetModal
+        isOpen={showBudgetModal}
+        onClose={() => setShowBudgetModal(false)}
+        toBeBudgeted={toBeBudgeted}
+        categories={categoryList}
+        onSuccess={handleBudgetSuccess}
+      />
     </div>
   );
 }

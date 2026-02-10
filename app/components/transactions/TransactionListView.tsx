@@ -15,6 +15,7 @@ type TransactionListViewProps = Readonly<{
   account: AccountType;
   onBack: () => void;
   onAccountUpdate: (account: AccountType) => void;
+  onCategoriesUpdate?: (categories: any[]) => void;
 }>;
 
 type TransactionWithSubCategory = Transaction & { subCategory: SubCategory };
@@ -23,6 +24,7 @@ export default function TransactionListView({
   account,
   onBack,
   onAccountUpdate,
+  onCategoriesUpdate,
 }: TransactionListViewProps) {
   const [transactions, setTransactions] = useState<
     TransactionWithSubCategory[]
@@ -168,6 +170,7 @@ export default function TransactionListView({
           onClose={() => setIsModalOpen(false)}
           onAdd={handleAddTransaction}
           subCategories={subCategories}
+          onCategoriesUpdate={onCategoriesUpdate}
         />
       )}
 
