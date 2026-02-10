@@ -178,30 +178,35 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
       } catch (err) {
         error = err;
       }
-      if (result) {
-        setCategoryList((prev) =>
-          prev.map((cat) => {
-            return {
-              ...cat,
-              SubCategory: cat.SubCategory.map((subCat) => {
-                if (subCat.id === result.fromSubCategory.id) {
-                  return {
-                    ...subCat,
-                    budgeted: result.fromSubCategory.budgeted,
-                  };
-                }
-                if (subCat.id === result.toSubCategory.id) {
-                  return {
-                    ...subCat,
-                    budgeted: result.toSubCategory.budgeted,
-                  };
-                }
-                return subCat;
-              }),
-            };
-          }),
-        );
+
+      if (!result) {
+        setShowMoveBudgetModal(false);
+        return;
       }
+
+      const updateSubCategory = (subCat: SubCategory) => {
+        if (subCat.id === result.fromSubCategory.id) {
+          return {
+            ...subCat,
+            budgeted: result.fromSubCategory.budgeted,
+          };
+        }
+        if (subCat.id === result.toSubCategory.id) {
+          return {
+            ...subCat,
+            budgeted: result.toSubCategory.budgeted,
+          };
+        }
+        return subCat;
+      };
+
+      setCategoryList((prev) =>
+        prev.map((cat) => ({
+          ...cat,
+          SubCategory: cat.SubCategory.map(updateSubCategory),
+        })),
+      );
+
       setShowMoveBudgetModal(false);
     };
 
