@@ -1,6 +1,6 @@
 import { AccountType } from "@prisma/client";
 import axios from "axios";
-import { CreateTransactionInput } from "../components/transactions/NewTransactionModal";
+import { CreateTransactionInput } from "../../components/transactions/NewTransactionModal";
 
 export async function getTransactions(account: AccountType) {
   try {

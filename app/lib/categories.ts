@@ -60,20 +60,6 @@ export async function getSubCategories() {
   }
 }
 
-export async function getCategories() {
-  try {
-    const response = await axios.get("/api/categories");
-    return response.data;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      throw new Error(
-        error.response?.data?.error || "Failed to fetch categories",
-      );
-    }
-    throw new Error("Failed to fetch categories");
-  }
-}
-
 export async function getToBeBudgeted() {
   try {
     const res = await axios.get("/api/transactions/to-be-budgeted");

@@ -27,7 +27,7 @@ import {
 } from "@dnd-kit/sortable";
 import AddCategoryForm from "./AddCategoryForm";
 import { persistCategoryOrder, getToBeBudgeted } from "@/app/lib/categories";
-import { moveBudgetedAmount } from "@/app/lib/moveBudget";
+import { moveBudgetedAmount } from "@/app/lib/services/moveBudget";
 import { SortableCategoryItem } from "./SortableCategoryItem";
 import FormattedAmount from "../FormattedAmount";
 import ToBudgetModal from "../budget/ToBudgetModal";

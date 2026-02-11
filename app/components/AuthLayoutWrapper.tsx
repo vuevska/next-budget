@@ -1,28 +1,20 @@
+import "server-only";
 import LayoutContent from "./LayoutContent";
-import { getServerSession } from "next-auth";
-import authOptions from "../lib/authOptions";
-import prisma from "@/prisma/client";
+import { getUser } from "../lib/data/user";
+import { getAccountTypes } from "../lib/data/accountTypes";
+import { getCategories } from "../lib/data/categories";
 
 export default async function AuthLayoutWrapper({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await getServerSession(authOptions);
-  if (!session) {
+  const currentUser = await getUser();
+  if (!currentUser) {
     return <>{children}</>;
   }
+  const accountTypes = await getAccountTypes(currentUser?.id);
+  const categories = await getCategories(currentUser?.id);
 
-  const [categories, accounts] = await Promise.all([
-    prisma.category.findMany({
-      where: { user: session.user },
-      include: { SubCategory: true },
-      orderBy: { order: "asc" },
-    }),
-    prisma.accountType.findMany({
-      where: { user: session.user },
-    }),
-  ]);
-
-  return <LayoutContent accounts={accounts} categories={categories} />;
+  return <LayoutContent accounts={accountTypes} categories={categories} />;
 }

@@ -1,7 +1,7 @@
 import { Button } from "@radix-ui/themes";
 import { FiX } from "react-icons/fi";
 import AccountFormButtons from "./AccountFormButtons";
-import { updateAccount } from "@/app/lib/accountTypes";
+import { updateAccount } from "@/app/lib/services/accountTypes";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";

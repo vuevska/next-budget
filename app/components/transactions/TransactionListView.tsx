@@ -3,7 +3,10 @@ import { AccountType, Transaction, SubCategory } from "@prisma/client";
 import { FiArrowLeft } from "react-icons/fi";
 import { Button } from "@radix-ui/themes";
 import NewTransactionModal from "./NewTransactionModal";
-import { deleteTransaction, getTransactions } from "@/app/lib/transactions";
+import {
+  deleteTransaction,
+  getTransactions,
+} from "@/app/lib/services/transactions";
 import LoadingTransactions from "./LoadingTransactions";
 import EmptyTransactions from "./EmptyTransactions";
 import TransactionsTable from "./TransactionsTable";
@@ -170,6 +173,7 @@ export default function TransactionListView({
 
       {isModalOpen && (
         <NewTransactionModal
+          userId={account.userId}
           accountId={account.id}
           onClose={() => setIsModalOpen(false)}
           onAdd={handleAddTransaction}
