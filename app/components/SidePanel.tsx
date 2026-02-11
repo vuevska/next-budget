@@ -1,3 +1,5 @@
+"use client";
+
 import { Box } from "@radix-ui/themes";
 import SignOutButton from "./signout/SignOutButton";
 import { TbUserDollar } from "react-icons/tb";
@@ -30,7 +32,6 @@ export default function SidePanel({
         <AccountList
           accounts={accounts}
           onAccountClick={(id) => onSelectAccount?.(id)}
-          onAccountCreate={onAccountCreate}
         />
       </Box>
 

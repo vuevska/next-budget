@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { AccountType, Transaction, SubCategory } from "@prisma/client";
 import { FiArrowLeft } from "react-icons/fi";
@@ -14,12 +16,11 @@ import { getSubCategories } from "@/app/lib/categories";
 import FormattedAmount from "../FormattedAmount";
 import DeleteTransactionModal from "./DeleteTransactionModal";
 import { IoMdAdd } from "react-icons/io";
+import { useRouter } from "next/navigation";
 
 type TransactionListViewProps = Readonly<{
   account: AccountType;
   onBack: () => void;
-  onAccountUpdate: (account: AccountType) => void;
-  onCategoriesUpdate?: (categories: any[]) => void;
 }>;
 
 type TransactionWithSubCategory = Transaction & { subCategory: SubCategory };
@@ -27,9 +28,8 @@ type TransactionWithSubCategory = Transaction & { subCategory: SubCategory };
 export default function TransactionListView({
   account,
   onBack,
-  onAccountUpdate,
-  onCategoriesUpdate,
 }: TransactionListViewProps) {
+  const router = useRouter();
   const [transactions, setTransactions] = useState<
     TransactionWithSubCategory[]
   >([]);
@@ -71,16 +71,7 @@ export default function TransactionListView({
   const handleAddTransaction = (newTransaction: TransactionWithSubCategory) => {
     setTransactions((prev) => [newTransaction, ...prev]);
 
-    const amountChange = newTransaction.isInflow
-      ? newTransaction.amount
-      : -newTransaction.amount;
-
-    const updatedAccount = {
-      ...account,
-      amount: account.amount + amountChange,
-    };
-
-    onAccountUpdate(updatedAccount);
+    router.refresh();
   };
 
   const handleDeleteTransaction = async (id: number) => {
@@ -94,22 +85,9 @@ export default function TransactionListView({
     try {
       const response = await deleteTransaction(id);
       if (response?.data?.success) {
-        const deletedTransaction = transactions.find((t) => t.id === id);
-
         setTransactions((prev) => prev.filter((t) => t.id !== id));
 
-        if (deletedTransaction) {
-          const amountChange = deletedTransaction.isInflow
-            ? -deletedTransaction.amount
-            : deletedTransaction.amount;
-
-          const updatedAccount = {
-            ...account,
-            amount: account.amount + amountChange,
-          };
-
-          onAccountUpdate(updatedAccount);
-        }
+        router.refresh();
 
         setDeleteConfirmationId(null);
       }
@@ -178,7 +156,6 @@ export default function TransactionListView({
           onClose={() => setIsModalOpen(false)}
           onAdd={handleAddTransaction}
           subCategories={subCategories}
-          onCategoriesUpdate={onCategoriesUpdate}
         />
       )}
 

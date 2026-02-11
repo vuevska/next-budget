@@ -1,13 +1,7 @@
 "use client";
 
-import {
-  useRef,
-  useState,
-  useEffect,
-  forwardRef,
-  useImperativeHandle,
-} from "react";
-import { Category, SubCategory } from "@prisma/client";
+import { useRef, useState, forwardRef } from "react";
+import { Category, SubCategory, ToBudget } from "@prisma/client";
 import { IoMdAdd } from "react-icons/io";
 import { FaWallet } from "react-icons/fa";
 import {
@@ -26,19 +20,21 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import AddCategoryForm from "./AddCategoryForm";
-import { persistCategoryOrder, getToBeBudgeted } from "@/app/lib/categories";
+import { persistCategoryOrder } from "@/app/lib/categories";
 import { moveBudgetedAmount } from "@/app/lib/services/moveBudget";
 import { SortableCategoryItem } from "./SortableCategoryItem";
 import FormattedAmount from "../FormattedAmount";
 import ToBudgetModal from "../budget/ToBudgetModal";
 import { Button } from "@radix-ui/themes";
 import MoveBudgetModal from "./MoveBudgetModal";
+import { useRouter } from "next/navigation";
 
 type SubCategoryWithBudgeted = SubCategory & { budgeted: number };
 
 type CategoryListProps = Readonly<{
   categories: (Category & { SubCategory: SubCategory[] })[];
   onAccountClick?: (id: number) => void;
+  toBeBudgeted: ToBudget | null;
 }>;
 
 export type CategoryListRef = {
@@ -46,13 +42,13 @@ export type CategoryListRef = {
 };
 
 const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
-  ({ categories, onAccountClick }: CategoryListProps, ref) => {
+  ({ categories, toBeBudgeted }: CategoryListProps, ref) => {
+    const router = useRouter();
     const [categoryList, setCategoryList] = useState(categories);
     const [showAddCategory, setShowAddCategory] = useState(false);
     const [expandedAddSubCategory, setExpandedAddSubCategory] = useState<
       number | null
     >(null);
-    const [toBeBudgeted, setToBeBudgeted] = useState(0);
     const [showBudgetModal, setShowBudgetModal] = useState(false);
     const [showMoveBudgetModal, setShowMoveBudgetModal] = useState(false);
     const [moveFromSubCategoryId, setMoveFromSubCategoryId] = useState<
@@ -73,35 +69,12 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
       }),
     );
 
-    useEffect(() => {
-      const fetchToBeBudgeted = async () => {
-        try {
-          const amount = await getToBeBudgeted();
-          setToBeBudgeted(amount);
-        } catch (error) {
-          console.error("Failed to fetch to-be-budgeted amount:", error);
-        }
-      };
-
-      fetchToBeBudgeted();
-    }, []);
-
-    useImperativeHandle(ref, () => ({
-      refreshToBudgeted: async () => {
-        try {
-          const amount = await getToBeBudgeted();
-          setToBeBudgeted(amount);
-        } catch (error) {
-          console.error("Failed to refresh to-be-budgeted amount:", error);
-        }
-      },
-    }));
-
     const handleAddCategory = (
       newCategory: Category & { SubCategory: SubCategory[] },
     ) => {
       setCategoryList([newCategory, ...categoryList]);
       setShowAddCategory(false);
+      router.refresh();
     };
 
     const handleAddSubCategory = (
@@ -116,6 +89,7 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
         ),
       );
       setExpandedAddSubCategory(null);
+      router.refresh();
     };
 
     const saveTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -140,26 +114,19 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
       allocatedAmount: number,
       updatedSubCategory?: SubCategoryWithBudgeted,
     ) => {
-      try {
-        const newAmount = await getToBeBudgeted();
-        setToBeBudgeted(newAmount);
-
-        // Refresh the subcategory budgeted amount in the UI
-        if (updatedSubCategory) {
-          setCategoryList(
-            categoryList.map((cat) => ({
-              ...cat,
-              SubCategory: cat.SubCategory.map((subCat) =>
-                subCat.id === updatedSubCategory.id
-                  ? { ...subCat, budgeted: updatedSubCategory.budgeted }
-                  : subCat,
-              ),
-            })),
-          );
-        }
-      } catch (error) {
-        console.error("Failed to refresh budget amounts:", error);
+      if (updatedSubCategory) {
+        setCategoryList(
+          categoryList.map((cat) => ({
+            ...cat,
+            SubCategory: cat.SubCategory.map((subCat) =>
+              subCat.id === updatedSubCategory.id
+                ? { ...subCat, budgeted: updatedSubCategory.budgeted }
+                : subCat,
+            ),
+          })),
+        );
       }
+      router.refresh();
     };
 
     const moveBudget = async (
@@ -168,7 +135,6 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
       toSubCategoryId: number,
     ) => {
       let result = null;
-      let error = null;
       try {
         result = await moveBudgetedAmount(
           amount,
@@ -176,7 +142,7 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
           toSubCategoryId,
         );
       } catch (err) {
-        error = err;
+        console.error("Failed to move budget:", err);
       }
 
       if (!result) {
@@ -208,12 +174,12 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
       );
 
       setShowMoveBudgetModal(false);
+      router.refresh();
     };
 
     return (
       <div className="w-full min-h-full bg-gradient-to-br from-slate-50 via-white to-slate-50 p-8">
         {/* Header Section */}
-
         <div className="mb-8 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
           <div className="flex-shrink-0">
             <h1 className="text-4xl font-bold text-slate-900 mt-2">
@@ -225,7 +191,7 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 w-full sm:w-auto sm:flex-1 sm:justify-center">
-            {toBeBudgeted > 0 && (
+            {toBeBudgeted!.amount > 0 && (
               <Button
                 onClick={() => setShowBudgetModal(true)}
                 className="bg-white rounded-xl border-2 border-green-200 p-4 shadow-sm hover:shadow-md hover:border-green-300 transition-all duration-200 cursor-pointer group w-full sm:w-auto"
@@ -234,7 +200,7 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
                   To be Budgeted
                 </p>
                 <p className="text-xl font-bold text-green-600 group-hover:scale-105 transition-transform origin-left">
-                  <FormattedAmount amount={toBeBudgeted} />
+                  <FormattedAmount amount={toBeBudgeted!.amount} />
                 </p>
               </Button>
             )}
@@ -321,7 +287,7 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
         <ToBudgetModal
           isOpen={showBudgetModal}
           onClose={() => setShowBudgetModal(false)}
-          toBeBudgeted={toBeBudgeted}
+          toBeBudgeted={toBeBudgeted!.amount}
           categories={categoryList}
           onSuccess={handleBudgetSuccess}
         />

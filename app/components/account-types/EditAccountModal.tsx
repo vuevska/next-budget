@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@radix-ui/themes";
 import { FiX } from "react-icons/fi";
 import AccountFormButtons from "./AccountFormButtons";
@@ -9,6 +11,7 @@ import { Label } from "@radix-ui/themes/components/context-menu";
 import ErrorMessage from "../ErrorMessage";
 import { editAccountTypeSchema } from "@/app/lib/validationSchema";
 import Portal from "../Portal";
+import { useRouter } from "next/navigation";
 
 type EditAccountFormValues = z.infer<typeof editAccountTypeSchema>;
 
@@ -16,15 +19,15 @@ type EditAccountModalProps = Readonly<{
   id: number;
   currentName: string;
   onClose: () => void;
-  onSave: (updated: any) => void;
 }>;
 
 export default function EditAccountModal({
   id,
   currentName,
   onClose,
-  onSave,
 }: EditAccountModalProps) {
+  const router = useRouter();
+
   const {
     register,
     handleSubmit,
@@ -37,9 +40,9 @@ export default function EditAccountModal({
 
   const onSubmit = async (data: EditAccountFormValues) => {
     try {
-      const updated = await updateAccount(id, data.name);
-      onSave(updated);
+      await updateAccount(id, data.name);
       onClose();
+      router.refresh();
     } catch (err: any) {
       setError("root", {
         type: "manual",
@@ -80,6 +83,7 @@ export default function EditAccountModal({
                 {...register("name")}
                 className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                 autoFocus
+                disabled={isSubmitting}
               />
             </div>
             <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
@@ -89,10 +93,13 @@ export default function EditAccountModal({
               </p>
             </div>
 
+            {errors.root && <ErrorMessage>{errors.root.message}</ErrorMessage>}
+
             <AccountFormButtons
               onSave={handleSubmit(onSubmit)}
               onCancel={onClose}
-              saveLabel="Save Changes"
+              saveLabel={isSubmitting ? "Saving..." : "Save Changes"}
+              disabled={isSubmitting}
             />
           </form>
         </div>

@@ -3,6 +3,7 @@ import LayoutContent from "./LayoutContent";
 import { getUser } from "../lib/data/user";
 import { getAccountTypes } from "../lib/data/accountTypes";
 import { getCategories } from "../lib/data/categories";
+import { getToBeBudgeted } from "../lib/data/budget";
 
 export default async function AuthLayoutWrapper({
   children,
@@ -15,6 +16,14 @@ export default async function AuthLayoutWrapper({
   }
   const accountTypes = await getAccountTypes(currentUser?.id);
   const categories = await getCategories(currentUser?.id);
+  const toBeBudgeted = await getToBeBudgeted(currentUser?.id);
 
-  return <LayoutContent accounts={accountTypes} categories={categories} user={currentUser} />;
+  return (
+    <LayoutContent
+      accounts={accountTypes}
+      categories={categories}
+      user={currentUser}
+      toBeBudgeted={toBeBudgeted}
+    />
+  );
 }

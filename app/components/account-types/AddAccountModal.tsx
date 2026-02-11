@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@radix-ui/themes";
 import { FiX } from "react-icons/fi";
 import AccountFormButtons from "./AccountFormButtons";
@@ -9,18 +11,17 @@ import { z } from "zod";
 import { Label } from "@radix-ui/themes/components/context-menu";
 import ErrorMessage from "../ErrorMessage";
 import Portal from "../Portal";
+import { useRouter } from "next/navigation";
 
 type AccountFormValues = z.infer<typeof createAccountTypeSchema>;
 
 type AddAccountModalProps = Readonly<{
   onClose: () => void;
-  onAdd: (account: any) => void;
 }>;
 
-export default function AddAccountModal({
-  onClose,
-  onAdd,
-}: AddAccountModalProps) {
+export default function AddAccountModal({ onClose }: AddAccountModalProps) {
+  const router = useRouter();
+
   const {
     register,
     handleSubmit,
@@ -33,10 +34,10 @@ export default function AddAccountModal({
 
   const onSubmit = async (data: AccountFormValues) => {
     try {
-      const created = await createAccount(data.name, data.amount);
-      onAdd(created);
+      await createAccount(data.name, data.amount);
       reset();
       onClose();
+      router.refresh();
     } catch (err: any) {
       setError("root", {
         type: "manual",
@@ -76,6 +77,7 @@ export default function AddAccountModal({
               <input
                 placeholder="e.g., Savings, Checking"
                 className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                disabled={isSubmitting}
                 {...register("name")}
               />
             </div>
@@ -89,14 +91,18 @@ export default function AddAccountModal({
                 step="0.01"
                 className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                 placeholder="0.00 мкд"
+                disabled={isSubmitting}
                 {...register("amount", { valueAsNumber: true })}
               />
             </div>
 
+            {errors.root && <ErrorMessage>{errors.root.message}</ErrorMessage>}
+
             <AccountFormButtons
               onSave={handleSubmit(onSubmit)}
               onCancel={onClose}
-              saveLabel="Add Account"
+              saveLabel={isSubmitting ? "Adding..." : "Add Account"}
+              disabled={isSubmitting}
             />
           </form>
         </div>
