@@ -13,14 +13,12 @@ type SidePanelProps = Readonly<{
     email?: string | null;
   };
   onSelectAccount?: (id: number | null) => void;
-  onAccountCreate?: (account: AccountType) => void;
 }>;
 
 export default function SidePanel({
   accounts,
   user,
   onSelectAccount,
-  onAccountCreate,
 }: SidePanelProps) {
   return (
     <>

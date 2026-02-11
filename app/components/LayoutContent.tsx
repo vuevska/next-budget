@@ -5,7 +5,7 @@ import { AccountType, Category, ToBudget, User } from "@prisma/client";
 import CategoryList, { type CategoryListRef } from "./categories/CategoryList";
 import SidePanelWrapper from "./SidePanelWrapper";
 import SidePanel from "./SidePanel";
-import TransactionListView from "./transactions/TransactionListView";
+import TransactionList from "./transactions/TransactionList";
 
 type LayoutContentProps = Readonly<{
   accounts: AccountType[];
@@ -40,7 +40,7 @@ export default function LayoutContent({
 
       <main className="flex-1 h-full overflow-y-auto">
         {selectedAccount ? (
-          <TransactionListView
+          <TransactionList
             account={selectedAccount}
             onBack={() => setSelectedAccountId(null)}
           />

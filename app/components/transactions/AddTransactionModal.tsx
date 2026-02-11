@@ -18,7 +18,7 @@ export type CreateTransactionInput = z.infer<typeof createTransactionSchema> & {
   accountId: number;
 };
 
-type NewTransactionModalProps = Readonly<{
+type AddTransactionModalProps = Readonly<{
   userId: string;
   accountId: number;
   onClose: () => void;
@@ -27,14 +27,14 @@ type NewTransactionModalProps = Readonly<{
   onCategoriesUpdate?: (categories: any[]) => void;
 }>;
 
-export default function NewTransactionModal({
+export default function AddTransactionModal({
   userId,
   accountId,
   onClose,
   onAdd,
   subCategories,
   onCategoriesUpdate,
-}: NewTransactionModalProps) {
+}: AddTransactionModalProps) {
   const {
     register,
     handleSubmit,
