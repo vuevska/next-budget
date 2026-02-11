@@ -1,58 +1,59 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { AccountType, Category } from "@prisma/client";
+import { useState, useRef, useMemo, useCallback } from "react";
+import { AccountType, Category, User } from "@prisma/client";
 import CategoryList, { type CategoryListRef } from "./categories/CategoryList";
 import TransactionListView from "./transactions/TransactionListView";
-import { useSession } from "next-auth/react";
 import SidePanelWrapper from "./SidePanelWrapper";
 import SidePanel from "./SidePanel";
 
 type LayoutContentProps = Readonly<{
   accounts: AccountType[];
   categories: (Category & { SubCategory: any[] })[];
+  user: User;
 }>;
 
 export default function LayoutContent({
   accounts: initialAccounts,
   categories: initialCategories,
+  user,
 }: LayoutContentProps) {
   const [accounts, setAccounts] = useState(initialAccounts);
   const [categories, setCategories] = useState(initialCategories);
   const [selectedAccountId, setSelectedAccountId] = useState<number | null>(
     null,
   );
-  const { data: session } = useSession();
   const categoryListRef = useRef<CategoryListRef>(null);
 
-  const selectedAccount = selectedAccountId
-    ? accounts.find((a) => a.id === selectedAccountId)
-    : null;
+  const selectedAccount = useMemo(
+    () => accounts.find((a) => a.id === selectedAccountId) ?? null,
+    [accounts, selectedAccountId],
+  );
 
-  const handleAccountUpdate = (updatedAccount: AccountType) => {
+  const handleAccountUpdate = useCallback((updatedAccount: AccountType) => {
     setAccounts((prev) =>
       prev.map((acc) => (acc.id === updatedAccount.id ? updatedAccount : acc)),
     );
-  };
+  }, []);
 
-  const handleAccountCreate = (newAccount: AccountType) => {
+  const handleAccountCreate = useCallback((newAccount: AccountType) => {
     setAccounts((prev) => [...prev, newAccount]);
-    // Refresh the to-be-budgeted amount in CategoryList
     categoryListRef.current?.refreshToBudgeted();
-  };
+  }, []);
 
-  const handleCategoriesUpdate = (
-    updatedCategories: (Category & { SubCategory: any[] })[],
-  ) => {
-    setCategories(updatedCategories);
-  };
+  const handleCategoriesUpdate = useCallback(
+    (updatedCategories: (Category & { SubCategory: any[] })[]) => {
+      setCategories(updatedCategories);
+    },
+    [],
+  );
 
   return (
     <div className="flex h-screen overflow-hidden">
       <SidePanelWrapper>
         <SidePanel
           accounts={accounts}
-          user={session?.user}
+          user={user}
           onSelectAccount={setSelectedAccountId}
           onAccountCreate={handleAccountCreate}
         />
@@ -67,10 +68,7 @@ export default function LayoutContent({
             onCategoriesUpdate={handleCategoriesUpdate}
           />
         ) : (
-          <CategoryList
-            ref={categoryListRef}
-            categories={categories}
-          />
+          <CategoryList ref={categoryListRef} categories={categories} />
         )}
       </main>
     </div>

@@ -16,5 +16,5 @@ export default async function AuthLayoutWrapper({
   const accountTypes = await getAccountTypes(currentUser?.id);
   const categories = await getCategories(currentUser?.id);
 
-  return <LayoutContent accounts={accountTypes} categories={categories} />;
+  return <LayoutContent accounts={accountTypes} categories={categories} user={currentUser} />;
 }
