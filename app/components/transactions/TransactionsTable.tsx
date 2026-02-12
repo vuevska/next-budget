@@ -46,10 +46,10 @@ const TransactionsTable = ({
               <th className="px-6 py-3 text-left font-semibold text-slate-700">
                 Category
               </th>
-              <th className="px-6 py-3 text-left font-semibold text-slate-700">
+              <th className="px-6 py-3 text-right font-semibold text-slate-700">
                 Amount
               </th>
-              <th className="px-6 py-3 text-left font-semibold text-slate-700">
+              <th className="px-6 py-3 text-center font-semibold text-slate-700">
                 Type
               </th>
               <th className="px-6 py-3 text-center font-semibold text-slate-700">
