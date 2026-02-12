@@ -1,11 +1,15 @@
-import { Transaction } from "@prisma/client";
+import { SubCategory, Transaction } from "@prisma/client";
 import { Button } from "@radix-ui/themes";
 import { FiTrash2 } from "react-icons/fi";
 import FormattedAmount from "../FormattedAmount";
 import { formatDate } from "@/app/lib/formatDate";
 
+type TransactionWithSubCategory = Transaction & {
+  subCategory: SubCategory | null;
+};
+
 interface TransactionsTableProps {
-  transactions: Transaction[];
+  transactions: TransactionWithSubCategory[];
   onDelete: (id: number) => void;
 }
 
