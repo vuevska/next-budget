@@ -2,10 +2,7 @@
 
 import { useRef, useState, forwardRef } from "react";
 import { Category, SubCategory, ToBudget } from "@prisma/client";
-import { IoMdAdd } from "react-icons/io";
-import { FaWallet } from "react-icons/fa";
 import {
-  DndContext,
   closestCenter,
   KeyboardSensor,
   PointerSensor,
@@ -13,21 +10,15 @@ import {
   useSensors,
   DragEndEvent,
 } from "@dnd-kit/core";
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
+import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import AddCategoryForm from "./AddCategoryForm";
 import { persistCategoryOrder } from "@/app/lib/categories";
 import { moveBudgetedAmount } from "@/app/lib/services/moveBudget";
-import { SortableCategoryItem } from "./SortableCategoryItem";
-import FormattedAmount from "../FormattedAmount";
 import ToBudgetModal from "../budget/ToBudgetModal";
-import { Button } from "@radix-ui/themes";
-import MoveBudgetModal from "./MoveBudgetModal";
 import { useRouter } from "next/navigation";
+import CategoryHeader from "./CategoryHeader";
+import EmptyCategories from "./EmptyCategories";
+import CategoryTable from "./CategoryTable";
 
 type SubCategoryWithBudgeted = SubCategory & { budgeted: number };
 
@@ -180,43 +171,11 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
     return (
       <div className="w-full min-h-full bg-gradient-to-br from-slate-50 via-white to-slate-50 p-8">
         {/* Header Section */}
-        <div className="mb-8 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
-          <div className="flex-shrink-0">
-            <h1 className="text-4xl font-bold text-slate-900 mt-2">
-              January 2026
-            </h1>
-            <p className="text-slate-600 text-sm mt-1">
-              Manage your spending categories
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 w-full sm:w-auto sm:flex-1 sm:justify-center">
-            {toBeBudgeted!.amount > 0 && (
-              <Button
-                onClick={() => setShowBudgetModal(true)}
-                className="bg-white rounded-xl border-2 border-green-200 p-4 shadow-sm hover:shadow-md hover:border-green-300 transition-all duration-200 cursor-pointer group w-full sm:w-auto"
-              >
-                <p className="text-xs font-normal text-slate-500 uppercase tracking-wide mb-1 group-hover:text-green-600 transition-colors">
-                  To be Budgeted
-                </p>
-                <p className="text-xl font-bold text-green-600 group-hover:scale-105 transition-transform origin-left">
-                  <FormattedAmount amount={toBeBudgeted!.amount} />
-                </p>
-              </Button>
-            )}
-          </div>
-
-          <Button
-            onClick={() => setShowAddCategory(!showAddCategory)}
-            className="flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl font-medium text-sm group w-full sm:w-auto flex-shrink-0"
-          >
-            <IoMdAdd
-              size={18}
-              className="group-hover:rotate-90 transition-transform"
-            />
-            New Category
-          </Button>
-        </div>
+        <CategoryHeader
+          amount={toBeBudgeted!.amount}
+          setShowBudgetModal={() => setShowBudgetModal(true)}
+          setShowAddCategory={() => setShowAddCategory(!showAddCategory)}
+        />
 
         {/* Add Category Form */}
         {showAddCategory && (
@@ -230,57 +189,22 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
 
         {/* Categories Grid */}
         {categoryList.length === 0 ? (
-          <div className="text-center py-10 bg-white rounded-2xl border-2 border-dashed border-slate-200">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-100 mb-4">
-              <FaWallet size={18} className="text-slate-400" />
-            </div>
-            <h3 className="text-slate-800 text-lg font-semibold mb-1">
-              No Categories Yet
-            </h3>
-            <p className="text-slate-600 text-sm">
-              Start organizing your budget by creating your first category
-            </p>
-          </div>
+          <EmptyCategories />
         ) : (
-          <DndContext
+          <CategoryTable
+            categoryList={categoryList}
             sensors={sensors}
             collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext
-              items={categoryList.map((cat) => cat.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              <div className="space-y-4">
-                {categoryList.map((category) => (
-                  <SortableCategoryItem
-                    key={category.id}
-                    category={category}
-                    expandedAddSubCategory={expandedAddSubCategory}
-                    onToggleAddSubCategory={(categoryId) =>
-                      setExpandedAddSubCategory(
-                        expandedAddSubCategory === categoryId
-                          ? null
-                          : categoryId,
-                      )
-                    }
-                    onAddSubCategory={handleAddSubCategory}
-                    onBudgetedClick={handleBudgetedClick}
-                  />
-                ))}
-                {/* Move Budget Modal */}
-                {showMoveBudgetModal && moveFromSubCategoryId !== null && (
-                  <MoveBudgetModal
-                    isOpen={showMoveBudgetModal}
-                    onClose={() => setShowMoveBudgetModal(false)}
-                    categories={categoryList}
-                    defaultFromSubCategoryId={moveFromSubCategoryId}
-                    onMove={moveBudget}
-                  />
-                )}
-              </div>
-            </SortableContext>
-          </DndContext>
+            expandedAddSubCategory={expandedAddSubCategory}
+            setExpandedAddSubCategory={setExpandedAddSubCategory}
+            handleAddSubCategory={handleAddSubCategory}
+            handleBudgetedClick={handleBudgetedClick}
+            showMoveBudgetModal={showMoveBudgetModal}
+            setShowMoveBudgetModal={setShowMoveBudgetModal}
+            moveFromSubCategoryId={moveFromSubCategoryId}
+            moveBudget={moveBudget}
+            handleDragEnd={handleDragEnd}
+          />
         )}
 
         {/* Budget Allocation Modal */}
@@ -295,7 +219,5 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
     );
   },
 );
-
-CategoryList.displayName = "CategoryList";
 
 export default CategoryList;
