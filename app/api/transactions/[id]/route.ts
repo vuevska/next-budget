@@ -3,6 +3,54 @@ import { getServerSession } from "next-auth";
 import authOptions from "@/app/lib/authOptions";
 import prisma from "@/prisma/client";
 
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } },
+) {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const resolvedParams = await params;
+  const accountTypeId = Number.parseInt(resolvedParams.id);
+
+  if (!accountTypeId) {
+    return NextResponse.json(
+      { error: "accountTypeId is required" },
+      { status: 400 },
+    );
+  }
+
+  const accountType = await prisma.accountType.findUnique({
+    where: { id: accountTypeId },
+  });
+
+  if (!accountType) {
+    return NextResponse.json(
+      { error: "Account type not found" },
+      { status: 404 },
+    );
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+  });
+
+  if (!user || accountType.userId !== user.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  }
+
+  const transactions = await (prisma.transaction.findMany as any)({
+    where: { accountTypeId: accountTypeId },
+    include: { subCategory: { include: { category: true } } },
+    orderBy: { date: "desc" },
+  });
+
+  return NextResponse.json(transactions, { status: 200 });
+}
+
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } },
@@ -14,7 +62,7 @@ export async function DELETE(
   }
 
   const resolvedParams = await params;
-  const transactionId = parseInt(resolvedParams.id);
+  const transactionId = Number.parseInt(resolvedParams.id);
 
   if (!transactionId) {
     return NextResponse.json(

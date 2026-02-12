@@ -1,12 +1,9 @@
-import { AccountType } from "@prisma/client";
 import axios from "axios";
 import { CreateTransactionInput } from "../../components/transactions/AddTransactionModal";
 
-export async function getTransactions(account: AccountType) {
+export async function getTransactions(id: number) {
   try {
-    const res = await axios.get(
-      `/api/transactions?accountTypeId=${account.id}`,
-    );
+    const res = await axios.get(`/api/transactions/${id}`);
     return res.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {

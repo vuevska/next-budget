@@ -10,7 +10,7 @@ import {
 import LoadingTransactions from "./LoadingTransactions";
 import EmptyTransactions from "./EmptyTransactions";
 import TransactionsTable from "./TransactionsTable";
-import { getSubCategories } from "@/app/lib/categories";
+import { getSubCategories } from "@/app/lib/services/sub-category";
 import DeleteTransactionModal from "./DeleteTransactionModal";
 import { useRouter } from "next/navigation";
 import TransactionsTableHeader from "./TransactionsTableHeader";
@@ -40,7 +40,7 @@ export default function TransactionList({
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
-        const data = await getTransactions(account);
+        const data = await getTransactions(account.id);
         setTransactions(data);
       } catch (error) {
         console.error("Error fetching transactions:", error);

@@ -10,7 +10,7 @@ import { Label } from "@radix-ui/themes/components/context-menu";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import ErrorMessage from "../ErrorMessage";
-import { allocateBudget } from "@/app/lib/categories";
+import { allocateBudget } from "@/app/lib/services/budget";
 import { z } from "zod";
 
 export type BudgetAmountInput = z.infer<typeof budgetAmountInput>;

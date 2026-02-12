@@ -1,8 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
 import { SubCategory } from "@prisma/client";
-import { createSubCategory } from "@/app/lib/categories";
 import { IoMdClose } from "react-icons/io";
 import { createSubCategorySchema } from "@/app/lib/validationSchema";
 import z from "zod";
@@ -11,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Label } from "@radix-ui/themes/components/context-menu";
 import ErrorMessage from "../ErrorMessage";
 import { Button } from "@radix-ui/themes";
+import { createSubCategory } from "@/app/lib/services/sub-category";
 
 type SubCategoryFormValues = z.infer<typeof createSubCategorySchema>;
 

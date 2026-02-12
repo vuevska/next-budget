@@ -12,7 +12,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import ErrorMessage from "../ErrorMessage";
 import { createTransaction } from "@/app/lib/services/transactions";
 import { useEffect, useState } from "react";
-import { getCategories } from "@/app/lib/data/categories";
+import { getCategories } from "@/app/lib/data/category";
 
 export type CreateTransactionInput = z.infer<typeof createTransactionSchema> & {
   accountId: number;

@@ -12,8 +12,8 @@ import {
 } from "@dnd-kit/core";
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import AddCategoryForm from "./AddCategoryForm";
-import { persistCategoryOrder } from "@/app/lib/categories";
-import { moveBudgetedAmount } from "@/app/lib/services/moveBudget";
+import { persistCategoryOrder } from "@/app/lib/services/category";
+import { moveBudgetedAmount } from "@/app/lib/services/budget";
 import ToBudgetModal from "../budget/ToBudgetModal";
 import { useRouter } from "next/navigation";
 import CategoryHeader from "./CategoryHeader";

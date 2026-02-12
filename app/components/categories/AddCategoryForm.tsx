@@ -1,5 +1,5 @@
 import { Category, SubCategory } from "@prisma/client";
-import { createCategory } from "@/app/lib/categories";
+import { createCategory } from "@/app/lib/services/category";
 import { IoMdClose } from "react-icons/io";
 import z from "zod";
 import { createCategorySchema } from "@/app/lib/validationSchema";
