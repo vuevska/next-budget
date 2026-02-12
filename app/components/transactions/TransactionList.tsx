@@ -106,6 +106,7 @@ export default function TransactionList({
     return (
       <TransactionsTable
         transactions={transactions}
+        subCategories={subCategories}
         onDelete={handleDeleteTransaction}
       />
     );

@@ -16,7 +16,7 @@ export default function TransactionsTableHeader({
   onNewTransaction,
 }: TransactionsTableHeaderProps) {
   return (
-    <div className="bg-slate-500 border-b border-slate-600 p-8 shadow-lg mb-8">
+    <div className="bg-slate-500 border-b border-slate-600 p-8 shadow-lg mb-2">
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 mb-2 mt-2">
         <div className="flex items-center gap-3 flex-shrink-0">
           <Button
@@ -35,7 +35,7 @@ export default function TransactionsTableHeader({
         </div>
         <div className="sm:flex-1"></div>
         <Button
-          onClick={() => onNewTransaction}
+          onClick={onNewTransaction}
           className="flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-600 hover:to-indigo-800 text-white rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl font-medium text-sm group w-full sm:w-auto flex-shrink-0"
         >
           <IoMdAdd
