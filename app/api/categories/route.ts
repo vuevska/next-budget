@@ -1,23 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/prisma/client";
-import { getServerSession } from "next-auth";
-import authOptions from "@/app/lib/authOptions";
+import {
+  requireAuth,
+  createErrorResponse,
+  createSuccessResponse,
+} from "@/app/lib/auth";
 import { createCategorySchema } from "@/app/lib/validationSchema";
 
 export async function GET(request: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const authResult = await requireAuth();
+  if (authResult instanceof NextResponse) return authResult;
 
-  if (!session?.user?.email) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-  });
-
-  if (!user) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
-  }
+  const user = authResult;
 
   const categories = await prisma.category.findMany({
     where: { userId: user.id },
@@ -25,34 +19,21 @@ export async function GET(request: NextRequest) {
     orderBy: { order: "asc" },
   });
 
-  return NextResponse.json(categories, { status: 200 });
+  return createSuccessResponse(categories);
 }
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) {
-    return NextResponse.json({}, { status: 401 });
-  }
+  const authResult = await requireAuth();
+  if (authResult instanceof NextResponse) return authResult;
+
+  const user = authResult;
+
   const body = await req.json();
   const validation = createCategorySchema.safeParse(body);
 
-  if (!validation.success)
-    return NextResponse.json(validation.error.format(), { status: 400 });
-
-  if (!session.user?.email) return NextResponse.json({}, { status: 401 });
-
-  const email = session.user.email;
-  if (!email) {
-    return NextResponse.json(
-      { success: false, error: "Unauthorized" },
-      { status: 401 },
-    );
+  if (!validation.success) {
+    return createErrorResponse(JSON.stringify(validation.error.format()), 400);
   }
-  const user = await prisma.user.findUnique({
-    where: { email },
-  });
-
-  if (!user) return NextResponse.json({}, { status: 401 });
 
   await prisma.category.updateMany({
     where: { userId: user.id },
@@ -64,11 +45,11 @@ export async function POST(req: NextRequest) {
       name: body.name,
       order: 0,
       user: {
-        connect: { email: session.user.email },
+        connect: { id: user.id },
       },
     },
     include: { SubCategory: true },
   });
 
-  return NextResponse.json(category, { status: 201 });
+  return createSuccessResponse(category, 201);
 }

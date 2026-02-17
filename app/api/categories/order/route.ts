@@ -1,50 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/prisma/client";
-import { getServerSession } from "next-auth";
-import authOptions from "@/app/lib/authOptions";
+import {
+  createErrorResponse,
+  createSuccessResponse,
+  requireAuth,
+} from "@/app/lib/auth";
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) {
-    return NextResponse.json(
-      { success: false, error: "Unauthorized" },
-      { status: 401 },
-    );
-  }
+  const authResult = await requireAuth();
+  if (authResult instanceof NextResponse) return authResult;
+  const user = authResult;
 
   const body = await req.json();
   const { categories } = body;
 
   if (!Array.isArray(categories)) {
-    return NextResponse.json(
-      { success: false, error: "Invalid request" },
-      { status: 400 },
-    );
+    return createErrorResponse("Invalid request", 400);
   }
-
-  const email = session.user.email;
-  if (!email) {
-    return NextResponse.json(
-      { success: false, error: "Unauthorized" },
-      { status: 401 },
-    );
-  }
-  const user = await prisma.user.findUnique({
-    where: { email },
-  });
 
   const userCategories = await prisma.category.findMany({
     where: {
       id: { in: categories.map((c: any) => c.id) },
-      userId: user!.id,
+      userId: user.id,
     },
   });
 
   if (userCategories.length !== categories.length) {
-    return NextResponse.json(
-      { success: false, error: "Some categories not found" },
-      { status: 404 },
-    );
+    return createErrorResponse("Some categories not found", 404);
   }
 
   await prisma.$transaction(
@@ -56,5 +38,5 @@ export async function POST(req: NextRequest) {
     ),
   );
 
-  return NextResponse.json({ success: true });
+  return createSuccessResponse({ success: true });
 }

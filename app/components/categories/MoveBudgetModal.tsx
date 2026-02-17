@@ -97,7 +97,7 @@ export default function MoveBudgetModal({
           <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
             <div>
               <Label className="block text-sm font-semibold text-slate-700 mb-2">
-                From Sub-category
+                From
               </Label>
               <select
                 {...register("fromSubCategoryId", { valueAsNumber: true })}
@@ -116,7 +116,7 @@ export default function MoveBudgetModal({
             </div>
             <div>
               <Label className="block text-sm font-semibold text-slate-700 mb-2">
-                To Sub-category
+                To
               </Label>
               <select
                 {...register("toSubCategoryId", { valueAsNumber: true })}

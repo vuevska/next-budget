@@ -1,20 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import authOptions from "@/app/lib/authOptions";
 import prisma from "@/prisma/client";
+import {
+  requireAuth,
+  verifyAccountTypeOwnership,
+  createErrorResponse,
+  createSuccessResponse,
+} from "@/app/lib/auth";
 import { createTransactionSchema } from "@/app/lib/validationSchema";
 
 export async function POST(request: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const authResult = await requireAuth();
+  if (authResult instanceof NextResponse) return authResult;
 
-  if (!session?.user?.email) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const user = authResult;
 
   const body = await request.json();
   const validation = createTransactionSchema.safeParse(body);
-  if (!validation.success)
-    return NextResponse.json(validation.error.format(), { status: 400 });
+  if (!validation.success) {
+    return createErrorResponse(JSON.stringify(validation.error.format()), 400);
+  }
 
   const {
     amount,
@@ -26,20 +30,17 @@ export async function POST(request: NextRequest) {
     date,
   } = body;
 
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-  });
-
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  const ownsAccount = await verifyAccountTypeOwnership(accountTypeId, user.id);
+  if (!ownsAccount) {
+    return createErrorResponse("Unauthorized access to account", 403);
   }
 
   const account = await prisma.accountType.findUnique({
     where: { id: accountTypeId },
   });
 
-  if (!account || account.userId !== user.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  if (!account) {
+    return createErrorResponse("Account not found", 404);
   }
 
   const transaction = await prisma.transaction.create({
@@ -112,5 +113,5 @@ export async function POST(request: NextRequest) {
     data: { amount: updatedToBudgetAmount },
   });
 
-  return NextResponse.json(transaction, { status: 201 });
+  return createSuccessResponse(transaction, 201);
 }

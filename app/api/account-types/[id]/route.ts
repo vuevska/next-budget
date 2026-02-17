@@ -1,15 +1,18 @@
-import authOptions from "@/app/lib/authOptions";
+import {
+  createErrorResponse,
+  createSuccessResponse,
+  requireAuth,
+} from "@/app/lib/auth";
 import { editAccountTypeSchema } from "@/app/lib/validationSchema";
 import prisma from "@/prisma/client";
-import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } },
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({}, { status: 401 });
+  const authResult = await requireAuth();
+  if (authResult instanceof NextResponse) return authResult;
 
   const body = await request.json();
   const validation = editAccountTypeSchema.safeParse(body);
@@ -18,30 +21,16 @@ export async function PATCH(
   const { name } = body;
 
   const resolvedParams = await params;
-  const id = parseInt(resolvedParams.id);
+  const id = Number.parseInt(resolvedParams.id);
 
-  if (isNaN(id)) {
-    return NextResponse.json(
-      { error: "Invalid account type ID" },
-      { status: 400 },
-    );
+  if (Number.isNaN(id)) {
+    return createErrorResponse("Invalid account type ID", 400);
   }
 
   const accountType = await prisma.accountType.findUnique({
     where: { id },
   });
-  if (!accountType) {
-    return NextResponse.json(
-      { error: "Account type not found" },
-      { status: 404 },
-    );
-  }
-
-  if (!accountType)
-    return NextResponse.json(
-      { error: "Invalid account type" },
-      { status: 404 },
-    );
+  if (!accountType) return createErrorResponse("Account type not found", 404);
 
   const updatedIssue = await prisma.accountType.update({
     where: { id: accountType.id },
@@ -50,5 +39,5 @@ export async function PATCH(
     },
   });
 
-  return NextResponse.json(updatedIssue);
+  return createSuccessResponse(updatedIssue, 201);
 }

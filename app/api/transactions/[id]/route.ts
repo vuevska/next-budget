@@ -1,45 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import authOptions from "@/app/lib/authOptions";
 import prisma from "@/prisma/client";
+import {
+  createErrorResponse,
+  createSuccessResponse,
+  requireAuth,
+  verifyAccountTypeOwnership,
+} from "@/app/lib/auth";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const session = await getServerSession(authOptions);
+  const authResult = await requireAuth();
+  if (authResult instanceof NextResponse) return authResult;
 
-  if (!session?.user?.email) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const user = authResult;
 
   const resolvedParams = await params;
   const accountTypeId = Number.parseInt(resolvedParams.id);
 
-  if (!accountTypeId) {
-    return NextResponse.json(
-      { error: "accountTypeId is required" },
-      { status: 400 },
-    );
-  }
-
-  const accountType = await prisma.accountType.findUnique({
-    where: { id: accountTypeId },
-  });
-
-  if (!accountType) {
-    return NextResponse.json(
-      { error: "Account type not found" },
-      { status: 404 },
-    );
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-  });
-
-  if (!user || accountType.userId !== user.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  const ownsAccount = await verifyAccountTypeOwnership(accountTypeId, user.id);
+  if (!ownsAccount) {
+    return createErrorResponse("Unauthorized access to account", 403);
   }
 
   const transactions = await (prisma.transaction.findMany as any)({
@@ -48,27 +30,20 @@ export async function GET(
     orderBy: { date: "desc" },
   });
 
-  return NextResponse.json(transactions, { status: 200 });
+  return createSuccessResponse(transactions, 200);
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } },
-) {
-  const session = await getServerSession(authOptions);
+export async function DELETE({ params }: { params: { id: string } }) {
+  const authResult = await requireAuth();
+  if (authResult instanceof NextResponse) return authResult;
 
-  if (!session?.user?.email) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const user = authResult;
 
   const resolvedParams = await params;
   const transactionId = Number.parseInt(resolvedParams.id);
 
   if (!transactionId) {
-    return NextResponse.json(
-      { error: "Invalid transaction ID" },
-      { status: 400 },
-    );
+    return createErrorResponse("Invalid transaction ID", 400);
   }
 
   const transaction = await prisma.transaction.findUnique({
@@ -77,26 +52,19 @@ export async function DELETE(
   });
 
   if (!transaction) {
-    return NextResponse.json(
-      { error: "Transaction not found" },
-      { status: 404 },
-    );
+    return createErrorResponse("Transaction not found", 404);
   }
 
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-  });
-
-  if (!user || transaction.accountType.userId !== user.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  if (transaction.accountType.userId !== user.id) {
+    return createErrorResponse("Unauthorized access to account", 403);
   }
 
   const account = await prisma.accountType.findUnique({
     where: { id: transaction.accountTypeId },
   });
 
-  if (!account || account.userId !== user.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  if (account?.userId !== user.id) {
+    return createErrorResponse("Unauthorized access to account", 403);
   }
 
   await prisma.transaction.delete({
@@ -114,7 +82,7 @@ export async function DELETE(
   });
 
   if (!toBudget) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    return createErrorResponse("Unauthorized access to account", 403);
   }
 
   let updatedAmount;
@@ -142,5 +110,5 @@ export async function DELETE(
     data: { amount: updatedToBudgetAmount },
   });
 
-  return NextResponse.json({ success: true });
+  return createSuccessResponse(200);
 }

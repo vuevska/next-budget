@@ -1,16 +1,17 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { AccountType, Category, ToBudget, User } from "@prisma/client";
+import { AccountType, Category, ToBudget } from "@prisma/client";
 import CategoryList, { type CategoryListRef } from "./categories/CategoryList";
 import SidePanelWrapper from "./SidePanelWrapper";
 import SidePanel from "./SidePanel";
 import TransactionList from "./transactions/TransactionList";
+import { AuthenticatedUser } from "../lib/auth";
 
 type LayoutContentProps = Readonly<{
   accounts: AccountType[];
   categories: (Category & { SubCategory: any[] })[];
-  user: User;
+  user: AuthenticatedUser;
   toBeBudgeted: ToBudget | null;
 }>;
 

@@ -1,39 +1,75 @@
-import prisma from "@/prisma/client";
 import { NextRequest, NextResponse } from "next/server";
+import {
+  requireAuth,
+  verifySubCategoryOwnership,
+  createErrorResponse,
+  createSuccessResponse,
+} from "@/app/lib/auth";
+import prisma from "@/prisma/client";
 
 export async function POST(req: NextRequest) {
+  const authResult = await requireAuth();
+  if (authResult instanceof NextResponse) return authResult;
+
+  const user = authResult;
+
   const { amount, fromSubCategoryId, toSubCategoryId } = await req.json();
+
   if (
     typeof amount !== "number" ||
     typeof fromSubCategoryId !== "number" ||
     typeof toSubCategoryId !== "number"
   ) {
-    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    return createErrorResponse("Invalid input");
   }
+
   if (fromSubCategoryId === toSubCategoryId) {
-    return NextResponse.json(
-      { error: "Cannot move to the same subcategory" },
-      { status: 400 },
-    );
+    return createErrorResponse("Cannot move to the same subcategory");
   }
-  // Fetch both subcategories
-  const [fromSub, toSub] = await Promise.all([
-    prisma.subCategory.findUnique({ where: { id: fromSubCategoryId } }),
-    prisma.subCategory.findUnique({ where: { id: toSubCategoryId } }),
+
+  const [ownsFromSub, ownsToSub] = await Promise.all([
+    verifySubCategoryOwnership(fromSubCategoryId, user.id),
+    verifySubCategoryOwnership(toSubCategoryId, user.id),
   ]);
+
+  if (!ownsFromSub || !ownsToSub) {
+    return createErrorResponse("Unauthorized access to subcategory", 403);
+  }
+
+  const [fromSub, toSub] = await Promise.all([
+    prisma.subCategory.findUnique({
+      where: { id: fromSubCategoryId },
+      include: {
+        category: {
+          select: { userId: true },
+        },
+      },
+    }),
+    prisma.subCategory.findUnique({
+      where: { id: toSubCategoryId },
+      include: {
+        category: {
+          select: { userId: true },
+        },
+      },
+    }),
+  ]);
+
   if (!fromSub || !toSub) {
-    return NextResponse.json(
-      { error: "Subcategory not found" },
-      { status: 404 },
-    );
+    return createErrorResponse("Subcategory not found", 404);
   }
+
+  if (
+    fromSub.category.userId !== user.id ||
+    toSub.category.userId !== user.id
+  ) {
+    return createErrorResponse("Unauthorized access to subcategory", 403);
+  }
+
   if (amount > fromSub.budgeted) {
-    return NextResponse.json(
-      { error: "Amount exceeds available budgeted" },
-      { status: 400 },
-    );
+    return createErrorResponse("Amount exceeds available budgeted");
   }
-  // Perform the move
+
   const [updatedFrom, updatedTo] = await prisma.$transaction([
     prisma.subCategory.update({
       where: { id: fromSubCategoryId },
@@ -44,8 +80,12 @@ export async function POST(req: NextRequest) {
       data: { budgeted: { increment: amount } },
     }),
   ]);
-  return NextResponse.json({
-    fromSubCategory: updatedFrom,
-    toSubCategory: updatedTo,
-  });
+
+  return createSuccessResponse(
+    {
+      fromSubCategory: updatedFrom,
+      toSubCategory: updatedTo,
+    },
+    200,
+  );
 }
