@@ -159,7 +159,12 @@ export default function ToBudgetModal({
               >
                 <option value="">Select a category</option>
                 {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
+                  <option
+                    key={cat.id}
+                    value={
+                      typeof cat.id === "string" ? parseInt(cat.id) : cat.id
+                    }
+                  >
                     {cat.name}
                   </option>
                 ))}
@@ -187,13 +192,9 @@ export default function ToBudgetModal({
                     {currentCategory.SubCategory.map((subCat) => (
                       <option key={subCat.id} value={subCat.id}>
                         {subCat.name}
-                        {subCat.budgeted > 0 && (
-                          <span className="text-slate-500">
-                            {" "}
-                            (Current:{" "}
-                            <FormattedAmount amount={subCat.budgeted} />)
-                          </span>
-                        )}
+                        {typeof subCat.budgeted === "number" &&
+                          subCat.budgeted > 0 &&
+                          ` (Current: ${subCat.budgeted})`}
                       </option>
                     ))}
                   </select>
@@ -212,19 +213,19 @@ export default function ToBudgetModal({
             {/* Action Buttons */}
             <div className="flex gap-3 pt-4">
               <button
+                type="submit"
+                disabled={isSubmitting || !isValidAmount || !isValidSubCategory}
+                className="flex-1 px-4 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 disabled:from-slate-300 disabled:to-slate-400 text-white font-medium rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? "Allocating..." : "Allocate"}
+              </button>
+              <button
                 type="button"
                 onClick={onClose}
                 disabled={isSubmitting}
                 className="flex-1 px-4 py-3 border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting || !isValidAmount || !isValidSubCategory}
-                className="flex-1 px-4 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 disabled:from-slate-300 disabled:to-slate-400 text-white font-medium rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
-              >
-                {isSubmitting ? "Allocating..." : "Allocate"}
               </button>
             </div>
           </form>

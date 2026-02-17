@@ -53,7 +53,7 @@ export default function EditAccountModal({
 
   return (
     <Portal>
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999]">
+      <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999]">
         <div className="bg-white rounded-2xl p-8 w-96 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
           <div className="flex items-center justify-between mb-6">
             <div>

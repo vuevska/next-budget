@@ -172,7 +172,7 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
       <div className="w-full min-h-full bg-gradient-to-br from-slate-50 via-white to-slate-50 p-8">
         {/* Header Section */}
         <CategoryHeader
-          amount={toBeBudgeted!.amount}
+          amount={toBeBudgeted?.amount ?? 0}
           setShowBudgetModal={() => setShowBudgetModal(true)}
           setShowAddCategory={() => setShowAddCategory(!showAddCategory)}
         />
@@ -211,7 +211,7 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
         <ToBudgetModal
           isOpen={showBudgetModal}
           onClose={() => setShowBudgetModal(false)}
-          toBeBudgeted={toBeBudgeted!.amount}
+          toBeBudgeted={toBeBudgeted?.amount ?? 0}
           categories={categoryList}
           onSuccess={handleBudgetSuccess}
         />

@@ -67,6 +67,13 @@ export default function AddSubCategoryForm({
 
       <div className="flex gap-2 justify-end">
         <Button
+          type="submit"
+          disabled={isSubmitting}
+          className="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition duration-150 font-medium text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isSubmitting ? "Adding..." : "Add Sub-Category"}
+        </Button>
+        <Button
           type="button"
           onClick={onCancel}
           className="flex items-center gap-1 px-2 py-1.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition duration-150 font-medium text-xs"
@@ -74,13 +81,6 @@ export default function AddSubCategoryForm({
         >
           <IoMdClose size={12} />
           Cancel
-        </Button>
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition duration-150 font-medium text-xs disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isSubmitting ? "Adding..." : "Add Subcategory"}
         </Button>
       </div>
     </form>

@@ -16,7 +16,9 @@ const CategoryHeader = ({
   return (
     <div className="mb-8 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
       <div className="flex-shrink-0">
-        <h1 className="text-4xl font-bold text-slate-900 mt-2">January 2026</h1>
+        <h1 className="text-4xl font-bold text-slate-900 mt-2">
+          February 2026
+        </h1>
         <p className="text-slate-600 text-sm mt-1">
           Manage your spending categories
         </p>
