@@ -6,7 +6,7 @@ import {
   requireAuth,
   verifyAccountTypeOwnership,
 } from "@/app/lib/auth";
-import { getOrCreateCurrentPeriod } from "@/app/lib/data/budget";
+import { getOrCreatePeriod } from "@/app/lib/data/budget";
 
 export async function GET(
   request: NextRequest,
@@ -34,7 +34,7 @@ export async function GET(
   return createSuccessResponse(transactions, 200);
 }
 
-export async function DELETE({ params }: { params: { id: string } }) {
+export async function DELETE({ params }: { params: Promise<{ id: string }> }) {
   const authResult = await requireAuth();
   if (authResult instanceof NextResponse) return authResult;
 
@@ -72,20 +72,25 @@ export async function DELETE({ params }: { params: { id: string } }) {
     where: { id: transactionId },
   });
 
-  const period = await getOrCreateCurrentPeriod();
+  const period = await getOrCreatePeriod(
+    transaction.date.getMonth() + 1,
+    transaction.date.getFullYear(),
+  );
 
-  const toBudget = await prisma.toBudget.findUnique({
+  const toBudget = await prisma.toBudget.upsert({
     where: {
       periodId_userId: {
         periodId: period.id,
         userId: user.id,
       },
     },
+    update: {},
+    create: {
+      periodId: period.id,
+      userId: user.id,
+      amount: 0,
+    },
   });
-
-  if (!toBudget) {
-    return createErrorResponse("Unauthorized access to account", 403);
-  }
 
   let updatedAmount;
   let updatedToBudgetAmount;
@@ -101,15 +106,37 @@ export async function DELETE({ params }: { params: { id: string } }) {
     data: { amount: updatedAmount },
   });
 
-  await prisma.toBudget.update({
-    where: {
-      periodId_userId: {
-        periodId: period.id,
-        userId: user.id,
+  if (transaction.isInflow) {
+    await prisma.toBudget.update({
+      where: {
+        periodId_userId: {
+          periodId: period.id,
+          userId: user.id,
+        },
       },
-    },
-    data: { amount: updatedToBudgetAmount },
-  });
+      data: { amount: updatedToBudgetAmount },
+    });
+  }
+
+  if (!transaction.isInflow && transaction.subCatId) {
+    await (prisma as any).subCategoryPeriod.upsert({
+      where: {
+        periodId_subCategoryId: {
+          periodId: period.id,
+          subCategoryId: transaction.subCatId,
+        },
+      },
+      update: {
+        spent: { decrement: transaction.amount },
+      },
+      create: {
+        periodId: period.id,
+        subCategoryId: transaction.subCatId,
+        budgeted: 0,
+        spent: 0,
+      },
+    });
+  }
 
   return createSuccessResponse(200);
 }

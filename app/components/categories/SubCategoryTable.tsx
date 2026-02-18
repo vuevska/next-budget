@@ -4,8 +4,13 @@ import { formatMKD } from "@/app/lib/formatMKD";
 import { SubCategory } from "@prisma/client";
 
 type SubCategoryTableProps = Readonly<{
-  subCategories: SubCategory[];
-  onBudgetedClick?: (subCategory: SubCategory) => void;
+  subCategories: (SubCategory & {
+    periodBudgeted?: number;
+    periodSpent?: number;
+    rollover?: number;
+    available?: number;
+  })[];
+  onBudgetedClick?: (subCategory: any) => void;
 }>;
 
 export default function SubCategoryTable({
@@ -20,23 +25,29 @@ export default function SubCategoryTable({
             <th className="px-4 py-2 text-left font-medium text-slate-600 w-[40%]">
               Name
             </th>
-            <th className="px-4 py-2 text-right font-medium text-slate-600 w-[20%]">
+            <th className="px-4 py-2 text-right font-medium text-slate-600 w-[15%]">
               Budgeted
             </th>
-            <th className="px-4 py-2 text-right font-medium text-slate-600 w-[25%]">
+            <th className="px-4 py-2 text-right font-medium text-slate-600 w-[20%]">
               Spent
             </th>
             <th className="px-4 py-2 text-right font-medium text-slate-600 w-[15%]">
-              Left
+              Rollover
+            </th>
+            <th className="px-4 py-2 text-right font-medium text-slate-600 w-[10%]">
+              Available
             </th>
           </tr>
         </thead>
 
         <tbody className="divide-y divide-slate-200">
           {subCategories.map((subCategory) => {
-            const spent = subCategory.spent || 0;
-            const left = subCategory.budgeted - spent;
-            const percentSpent = (spent / subCategory.budgeted) * 100 || 0;
+            const budgeted = subCategory.periodBudgeted ?? 0;
+            const spent = subCategory.periodSpent ?? 0;
+            const rollover = subCategory.rollover ?? 0;
+            const available =
+              subCategory.available ?? rollover + budgeted - spent;
+            const percentSpent = (spent / (budgeted || 1)) * 100 || 0;
 
             return (
               <tr
@@ -62,7 +73,7 @@ export default function SubCategoryTable({
                         : undefined
                     }
                   >
-                    {formatMKD(subCategory.budgeted)}
+                    {formatMKD(budgeted)}
                   </button>
                 </td>
 
@@ -83,8 +94,14 @@ export default function SubCategoryTable({
                 </td>
 
                 <td className="px-4 py-2 text-right">
+                  <span className="font-medium text-slate-700">
+                    {formatMKD(rollover)}
+                  </span>
+                </td>
+
+                <td className="px-4 py-2 text-right">
                   <span className="font-medium text-emerald-600">
-                    {formatMKD(left)}
+                    {formatMKD(available)}
                   </span>
                 </td>
               </tr>

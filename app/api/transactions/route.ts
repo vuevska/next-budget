@@ -7,7 +7,7 @@ import {
   createSuccessResponse,
 } from "@/app/lib/auth";
 import { createTransactionSchema } from "@/app/lib/validationSchema";
-import { getOrCreateCurrentPeriod } from "@/app/lib/data/budget";
+import { getOrCreatePeriod } from "@/app/lib/data/budget";
 
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
@@ -44,7 +44,11 @@ export async function POST(request: NextRequest) {
     return createErrorResponse("Account not found", 404);
   }
 
-  const period = await getOrCreateCurrentPeriod();
+  const txDate = new Date(date);
+  const period = await getOrCreatePeriod(
+    txDate.getMonth() + 1,
+    txDate.getFullYear(),
+  );
 
   const transaction = await prisma.transaction.create({
     data: {
@@ -63,57 +67,64 @@ export async function POST(request: NextRequest) {
 
   // Update subcategory spent amount if it's an expense (not inflow) and has a subcategory
   if (!isInflow && subCatId) {
-    await prisma.subCategory.update({
-      where: { id: subCatId },
-      data: {
-        spent: {
-          increment: amount,
+    await (prisma as any).subCategoryPeriod.upsert({
+      where: {
+        periodId_subCategoryId: {
+          periodId: period.id,
+          subCategoryId: subCatId,
         },
+      },
+      update: {
+        spent: { increment: amount },
+      },
+      create: {
+        periodId: period.id,
+        subCategoryId: subCatId,
+        spent: amount,
+        budgeted: 0,
       },
     });
   }
 
-  const existingToBudget = await prisma.toBudget.findUnique({
+  const existingToBudget = await prisma.toBudget.upsert({
     where: {
       periodId_userId: {
         periodId: period.id,
         userId: user.id,
       },
     },
+    update: {},
+    create: {
+      periodId: period.id,
+      userId: user.id,
+      amount: 0,
+    },
   });
 
   let updatedAmount;
   let updatedToBudgetAmount;
-  if (existingToBudget) {
-    if (isInflow) {
-      updatedAmount = account.amount + amount;
-      updatedToBudgetAmount = existingToBudget.amount + amount;
-    } else {
-      updatedAmount = account.amount - amount;
-    }
+  if (isInflow) {
+    updatedAmount = account.amount + amount;
+    updatedToBudgetAmount = existingToBudget.amount + amount;
   } else {
-    await prisma.toBudget.create({
-      data: {
-        periodId: period.id,
-        userId: user.id,
-        amount: body.amount,
-      },
-    });
+    updatedAmount = account.amount - amount;
   }
   await prisma.accountType.update({
     where: { id: accountTypeId },
     data: { amount: updatedAmount },
   });
 
-  await prisma.toBudget.update({
-    where: {
-      periodId_userId: {
-        periodId: period.id,
-        userId: user.id,
+  if (isInflow) {
+    await prisma.toBudget.update({
+      where: {
+        periodId_userId: {
+          periodId: period.id,
+          userId: user.id,
+        },
       },
-    },
-    data: { amount: updatedToBudgetAmount },
-  });
+      data: { amount: updatedToBudgetAmount },
+    });
+  }
 
   return createSuccessResponse(transaction, 201);
 }

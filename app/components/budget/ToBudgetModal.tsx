@@ -21,6 +21,8 @@ type ToBudgetModalProps = Readonly<{
   toBeBudgeted: number;
   categories: (Category & { SubCategory: SubCategory[] })[];
   onSuccess: (amount: number, updatedSubCategory?: any) => void;
+  month: number;
+  year: number;
 }>;
 
 export default function ToBudgetModal({
@@ -29,6 +31,8 @@ export default function ToBudgetModal({
   toBeBudgeted,
   categories,
   onSuccess,
+  month,
+  year,
 }: ToBudgetModalProps) {
   const {
     register,
@@ -61,8 +65,13 @@ export default function ToBudgetModal({
 
   const onSubmit = async (data: BudgetAmountInput) => {
     try {
-      const result = await allocateBudget(data.amount, data.subCategoryId);
-      onSuccess(data.amount, result.subCategory);
+      const result = await allocateBudget(
+        data.amount,
+        data.subCategoryId,
+        month,
+        year,
+      );
+      onSuccess(data.amount, result.subCategoryPeriod);
       onClose();
     } catch (err: any) {
       setError("root", {
@@ -161,9 +170,7 @@ export default function ToBudgetModal({
                 {categories.map((cat) => (
                   <option
                     key={cat.id}
-                    value={
-                      typeof cat.id === "string" ? parseInt(cat.id) : cat.id
-                    }
+                    value={cat.id}
                   >
                     {cat.name}
                   </option>
@@ -173,12 +180,12 @@ export default function ToBudgetModal({
             </div>
 
             {/* Subcategory Selection */}
-            {categoryId && currentCategory && (
+            {Boolean(categoryId && currentCategory) && (
               <div>
                 <Label className="block text-sm font-semibold text-slate-700 mb-2">
                   Sub-category
                 </Label>
-                {currentCategory.SubCategory.length === 0 ? (
+                {currentCategory?.SubCategory.length === 0 ? (
                   <div className="px-4 py-3 bg-slate-50 border border-dashed border-slate-300 rounded-xl text-slate-600 text-sm">
                     No sub-categories in this category. Please create one first.
                   </div>
@@ -189,12 +196,12 @@ export default function ToBudgetModal({
                     disabled={isSubmitting}
                   >
                     <option value="">Select a subcategory</option>
-                    {currentCategory.SubCategory.map((subCat) => (
+                    {currentCategory?.SubCategory.map((subCat) => (
                       <option key={subCat.id} value={subCat.id}>
                         {subCat.name}
-                        {typeof subCat.budgeted === "number" &&
-                          subCat.budgeted > 0 &&
-                          ` (Current: ${subCat.budgeted})`}
+                        {typeof (subCat as any).periodBudgeted === "number" &&
+                          (subCat as any).periodBudgeted > 0 &&
+                          ` (Current: ${(subCat as any).periodBudgeted})`}
                       </option>
                     ))}
                   </select>

@@ -6,6 +6,7 @@ import {
   createSuccessResponse,
 } from "@/app/lib/auth";
 import prisma from "@/prisma/client";
+import { getOrCreatePeriod } from "@/app/lib/data/budget";
 
 export async function POST(req: NextRequest) {
   const authResult = await requireAuth();
@@ -13,7 +14,8 @@ export async function POST(req: NextRequest) {
 
   const user = authResult;
 
-  const { amount, fromSubCategoryId, toSubCategoryId } = await req.json();
+  const { amount, fromSubCategoryId, toSubCategoryId, month, year } =
+    await req.json();
 
   if (
     typeof amount !== "number" ||
@@ -36,6 +38,12 @@ export async function POST(req: NextRequest) {
     return createErrorResponse("Unauthorized access to subcategory", 403);
   }
 
+  const currentDate = new Date();
+
+  const period = await getOrCreatePeriod(
+    currentDate.getMonth() + 1,
+    currentDate.getFullYear(),
+  );
   const [fromSub, toSub] = await Promise.all([
     prisma.subCategory.findUnique({
       where: { id: fromSubCategoryId },
@@ -66,25 +74,57 @@ export async function POST(req: NextRequest) {
     return createErrorResponse("Unauthorized access to subcategory", 403);
   }
 
-  if (amount > fromSub.budgeted) {
+  const fromPeriodRow = await prisma.subCategoryPeriod.upsert({
+    where: {
+      periodId_subCategoryId: {
+        periodId: period.id,
+        subCategoryId: fromSubCategoryId,
+      },
+    },
+    update: {},
+    create: {
+      periodId: period.id,
+      subCategoryId: fromSubCategoryId,
+      budgeted: 0,
+      spent: 0,
+    },
+  });
+
+  if (amount > fromPeriodRow.budgeted) {
     return createErrorResponse("Amount exceeds available budgeted");
   }
 
   const [updatedFrom, updatedTo] = await prisma.$transaction([
-    prisma.subCategory.update({
-      where: { id: fromSubCategoryId },
+    prisma.subCategoryPeriod.update({
+      where: {
+        periodId_subCategoryId: {
+          periodId: period.id,
+          subCategoryId: fromSubCategoryId,
+        },
+      },
       data: { budgeted: { decrement: amount } },
     }),
-    prisma.subCategory.update({
-      where: { id: toSubCategoryId },
-      data: { budgeted: { increment: amount } },
+    prisma.subCategoryPeriod.upsert({
+      where: {
+        periodId_subCategoryId: {
+          periodId: period.id,
+          subCategoryId: toSubCategoryId,
+        },
+      },
+      update: { budgeted: { increment: amount } },
+      create: {
+        periodId: period.id,
+        subCategoryId: toSubCategoryId,
+        budgeted: amount,
+        spent: 0,
+      },
     }),
   ]);
 
   return createSuccessResponse(
     {
-      fromSubCategory: updatedFrom,
-      toSubCategory: updatedTo,
+      fromSubCategoryPeriod: updatedFrom,
+      toSubCategoryPeriod: updatedTo,
     },
     200,
   );

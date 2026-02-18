@@ -47,8 +47,15 @@ export async function POST(req: NextRequest) {
     data: {
       name: body.name,
       catId: body.categoryId,
-      budgeted: 0,
+    },
+  });
+
+  await prisma.subCategoryPeriod.create({
+    data: {
       periodId: period.id,
+      subCategoryId: subCategory.id,
+      budgeted: 0,
+      spent: 0,
     },
   });
 

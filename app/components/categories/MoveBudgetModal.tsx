@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import { Category, SubCategory } from "@prisma/client";
 import { IoMdClose } from "react-icons/io";
 import Portal from "../Portal";
 import { useForm } from "react-hook-form";
@@ -23,7 +22,7 @@ export default function MoveBudgetModal({
 }: Readonly<{
   isOpen: boolean;
   onClose: () => void;
-  categories: (Category & { SubCategory: SubCategory[] })[];
+  categories: any[];
   defaultFromSubCategoryId: number;
   onMove: (
     amount: number,
@@ -54,7 +53,7 @@ export default function MoveBudgetModal({
     (s) => s.id === fromSubCategoryId,
   );
 
-  const maxAmount = fromSubCategory ? fromSubCategory.budgeted : 0;
+  const maxAmount = fromSubCategory ? (fromSubCategory.periodBudgeted ?? 0) : 0;
 
   const onSubmit = (data: MoveBudgetInput) => {
     if (data.fromSubCategoryId === data.toSubCategoryId) {
@@ -108,7 +107,7 @@ export default function MoveBudgetModal({
                 {allSubCategories.map((subCat) => (
                   <option key={subCat.id} value={subCat.id}>
                     {subCat.name} (Budgeted:{" "}
-                    <FormattedAmount amount={subCat.budgeted} />)
+                    <FormattedAmount amount={subCat.periodBudgeted ?? 0} />)
                   </option>
                 ))}
               </select>
@@ -127,7 +126,7 @@ export default function MoveBudgetModal({
                 {allSubCategories.map((subCat) => (
                   <option key={subCat.id} value={subCat.id}>
                     {subCat.name} (Budgeted:{" "}
-                    <FormattedAmount amount={subCat.budgeted} />)
+                    <FormattedAmount amount={subCat.periodBudgeted ?? 0} />)
                   </option>
                 ))}
               </select>
@@ -149,8 +148,7 @@ export default function MoveBudgetModal({
               <ErrorMessage>{errors.amount?.message}</ErrorMessage>
               {fromSubCategory && (
                 <div className="mt-2 text-xs text-slate-600">
-                  Max available:{" "}
-                  <FormattedAmount amount={fromSubCategory.budgeted} />
+                  Max available: <FormattedAmount amount={maxAmount} />
                 </div>
               )}
             </div>

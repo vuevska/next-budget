@@ -14,12 +14,12 @@ export function SortableCategoryItem({
   onAddSubCategory,
   onBudgetedClick,
 }: Readonly<{
-  category: Category & { SubCategory: SubCategory[] };
+  category: any;
   expandedAddSubCategory: number | null;
   onToggleAddSubCategory: (categoryId: number) => void;
   onAddSubCategory: (categoryId: number, subCategory: SubCategory) => void;
   onAccountClick?: (id: number) => void;
-  onBudgetedClick?: (subCategory: SubCategory) => void;
+  onBudgetedClick?: (subCategory: any) => void;
 }>) {
   const {
     attributes,

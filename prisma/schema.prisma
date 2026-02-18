@@ -74,13 +74,28 @@ model Category {
 }
 
 model SubCategory {
-  id          Int           @id @default(autoincrement())
-  name        String        @db.VarChar(255)
-  budgeted    Float         @db.Double
-  spent       Float         @default(0) @db.Double
+  id          Int                 @id @default(autoincrement())
+  name        String              @db.VarChar(255)
   catId       Int
-  category    Category      @relation(fields: [catId], references: [id])
+  category    Category            @relation(fields: [catId], references: [id])
   Transaction Transaction[]
+  periods     SubCategoryPeriod[]
+}
+
+model SubCategoryPeriod {
+  id            Int      @id @default(autoincrement())
+  periodId      Int
+  subCategoryId Int
+  budgeted      Float    @default(0) @db.Double
+  spent         Float    @default(0) @db.Double
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  period      Period      @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  subCategory SubCategory @relation(fields: [subCategoryId], references: [id], onDelete: Cascade)
+
+  @@unique([periodId, subCategoryId])
+  @@index([subCategoryId, periodId])
 }
 
 model Transaction {
@@ -103,7 +118,8 @@ model Period {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  toBudget ToBudget[]
+  toBudget           ToBudget[]
+  subCategoryPeriods SubCategoryPeriod[]
 
   @@unique([month, year])
   @@index([month, year])

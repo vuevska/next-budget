@@ -10,10 +10,10 @@ import {
 } from "@dnd-kit/sortable";
 import { SortableCategoryItem } from "./SortableCategoryItem";
 import MoveBudgetModal from "./MoveBudgetModal";
-import { Category, SubCategory } from "@prisma/client";
+import { SubCategory } from "@prisma/client";
 
 type CategoryTableProps = Readonly<{
-  categoryList: (Category & { SubCategory: SubCategory[] })[];
+  categoryList: any[];
   sensors: ReturnType<typeof useSensors>;
   collisionDetection: typeof closestCenter;
   expandedAddSubCategory: number | null;
@@ -22,7 +22,7 @@ type CategoryTableProps = Readonly<{
     categoryId: number,
     newSubCategory: SubCategory,
   ) => void;
-  handleBudgetedClick: (subCategory: SubCategory) => void;
+  handleBudgetedClick: (subCategory: any) => void;
   showMoveBudgetModal: boolean;
   setShowMoveBudgetModal: (show: boolean) => void;
   moveFromSubCategoryId: number | null;

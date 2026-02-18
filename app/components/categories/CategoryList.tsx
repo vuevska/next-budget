@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, forwardRef } from "react";
+import { useEffect, useRef, useState, forwardRef } from "react";
 import { Category, SubCategory, ToBudget } from "@prisma/client";
 import {
   closestCenter,
@@ -13,7 +13,10 @@ import {
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import AddCategoryForm from "./AddCategoryForm";
 import { persistCategoryOrder } from "@/app/lib/services/category";
-import { moveBudgetedAmount } from "@/app/lib/services/budget";
+import {
+  getBudgetPeriodSnapshot,
+  moveBudgetedAmount,
+} from "@/app/lib/services/budget";
 import ToBudgetModal from "../budget/ToBudgetModal";
 import { useRouter } from "next/navigation";
 import CategoryHeader from "./CategoryHeader";
@@ -21,6 +24,14 @@ import EmptyCategories from "./EmptyCategories";
 import CategoryTable from "./CategoryTable";
 
 type SubCategoryWithBudgeted = SubCategory & { budgeted: number };
+type SubCategoryBudgetView = SubCategory & {
+  periodBudgeted?: number;
+  periodSpent?: number;
+  rollover?: number;
+  available?: number;
+};
+
+type CategoryBudgetView = Category & { SubCategory: SubCategoryBudgetView[] };
 
 type CategoryListProps = Readonly<{
   categories: (Category & { SubCategory: SubCategory[] })[];
@@ -35,7 +46,9 @@ export type CategoryListRef = {
 const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
   ({ categories, toBeBudgeted }: CategoryListProps, ref) => {
     const router = useRouter();
-    const [categoryList, setCategoryList] = useState(categories);
+    const [categoryList, setCategoryList] = useState<CategoryBudgetView[]>(
+      categories as any,
+    );
     const [showAddCategory, setShowAddCategory] = useState(false);
     const [expandedAddSubCategory, setExpandedAddSubCategory] = useState<
       number | null
@@ -52,7 +65,21 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
     const now = new Date();
     const [activeMonth, setActiveMonth] = useState(now.getMonth() + 1);
     const [activeYear, setActiveYear] = useState(now.getFullYear());
-    const [toBudgetAmount] = useState(toBeBudgeted?.amount ?? 0);
+    const [toBudgetAmount, setToBudgetAmount] = useState(
+      toBeBudgeted?.amount ?? 0,
+    );
+
+    const refreshSnapshot = async (month: number, year: number) => {
+      const snapshot = await getBudgetPeriodSnapshot(month, year);
+      setCategoryList(snapshot.categories);
+      setToBudgetAmount(snapshot.toBudget?.amount ?? 0);
+    };
+
+    useEffect(() => {
+      refreshSnapshot(activeMonth, activeYear).catch((err) => {
+        console.error("Failed to load budget snapshot", err);
+      });
+    }, [activeMonth, activeYear]);
     const sensors = useSensors(
       useSensor(PointerSensor, {
         activationConstraint: {
@@ -109,19 +136,7 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
       allocatedAmount: number,
       updatedSubCategory?: SubCategoryWithBudgeted,
     ) => {
-      if (updatedSubCategory) {
-        setCategoryList(
-          categoryList.map((cat) => ({
-            ...cat,
-            SubCategory: cat.SubCategory.map((subCat) =>
-              subCat.id === updatedSubCategory.id
-                ? { ...subCat, budgeted: updatedSubCategory.budgeted }
-                : subCat,
-            ),
-          })),
-        );
-      }
-      router.refresh();
+      await refreshSnapshot(activeMonth, activeYear);
     };
 
     const handlePrevMonth = () => {
@@ -155,6 +170,8 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
           amount,
           fromSubCategoryId,
           toSubCategoryId,
+          activeMonth,
+          activeYear,
         );
       } catch (err) {
         console.error("Failed to move budget:", err);
@@ -165,31 +182,8 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
         return;
       }
 
-      const updateSubCategory = (subCat: SubCategory) => {
-        if (subCat.id === result.fromSubCategory.id) {
-          return {
-            ...subCat,
-            budgeted: result.fromSubCategory.budgeted,
-          };
-        }
-        if (subCat.id === result.toSubCategory.id) {
-          return {
-            ...subCat,
-            budgeted: result.toSubCategory.budgeted,
-          };
-        }
-        return subCat;
-      };
-
-      setCategoryList((prev) =>
-        prev.map((cat) => ({
-          ...cat,
-          SubCategory: cat.SubCategory.map(updateSubCategory),
-        })),
-      );
-
       setShowMoveBudgetModal(false);
-      router.refresh();
+      await refreshSnapshot(activeMonth, activeYear);
     };
 
     return (
@@ -242,6 +236,8 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
           toBeBudgeted={toBudgetAmount}
           categories={categoryList}
           onSuccess={handleBudgetSuccess}
+          month={activeMonth}
+          year={activeYear}
         />
       </div>
     );

@@ -37,17 +37,17 @@ const DeleteTransactionModal = ({
             <div className="flex gap-3">
               <Button
                 type="button"
-                onClick={onCancel}
-                className="flex-1 px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-900 rounded-lg font-medium transition-colors"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
                 onClick={onConfirm}
                 className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
               >
                 Delete
+              </Button>
+              <Button
+                type="button"
+                onClick={onCancel}
+                className="flex-1 px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-900 rounded-lg font-medium transition-colors"
+              >
+                Cancel
               </Button>
             </div>
           </div>

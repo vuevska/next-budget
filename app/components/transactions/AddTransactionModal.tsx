@@ -186,19 +186,19 @@ export default function AddTransactionModal({
             {/* Buttons */}
             <div className="flex gap-3 pt-4">
               <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+              >
+                {isSubmitting ? "Creating..." : "Create"}
+              </Button>
+              <Button
                 type="button"
                 onClick={onClose}
                 disabled={isSubmitting}
                 className="flex-1 px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-900 rounded-lg font-medium transition-colors disabled:opacity-50"
               >
                 Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
-              >
-                {isSubmitting ? "Creating..." : "Create"}
               </Button>
             </div>
           </form>
