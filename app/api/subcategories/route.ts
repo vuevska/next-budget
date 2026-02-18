@@ -6,6 +6,7 @@ import {
   createSuccessResponse,
   requireAuth,
 } from "@/app/lib/auth";
+import { getOrCreateCurrentPeriod } from "@/app/lib/data/budget";
 
 export async function GET() {
   const authResult = await requireAuth();
@@ -40,11 +41,14 @@ export async function POST(req: NextRequest) {
     return createErrorResponse("Category not found", 404);
   }
 
+  const period = await getOrCreateCurrentPeriod();
+
   const subCategory = await prisma.subCategory.create({
     data: {
       name: body.name,
       catId: body.categoryId,
       budgeted: 0,
+      periodId: period.id,
     },
   });
 

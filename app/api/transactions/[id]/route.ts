@@ -6,6 +6,7 @@ import {
   requireAuth,
   verifyAccountTypeOwnership,
 } from "@/app/lib/auth";
+import { getOrCreateCurrentPeriod } from "@/app/lib/data/budget";
 
 export async function GET(
   request: NextRequest,
@@ -60,10 +61,10 @@ export async function DELETE({ params }: { params: { id: string } }) {
   }
 
   const account = await prisma.accountType.findUnique({
-    where: { id: transaction.accountTypeId },
+    where: { id: transaction.accountTypeId, userId: user.id },
   });
 
-  if (account?.userId !== user.id) {
+  if (!account) {
     return createErrorResponse("Unauthorized access to account", 403);
   }
 
@@ -71,11 +72,12 @@ export async function DELETE({ params }: { params: { id: string } }) {
     where: { id: transactionId },
   });
 
-  //TODO: change to current period
+  const period = await getOrCreateCurrentPeriod();
+
   const toBudget = await prisma.toBudget.findUnique({
     where: {
       periodId_userId: {
-        periodId: 2,
+        periodId: period.id,
         userId: user.id,
       },
     },
@@ -99,11 +101,10 @@ export async function DELETE({ params }: { params: { id: string } }) {
     data: { amount: updatedAmount },
   });
 
-  //TODO CHANGE TO ACTUAL PERIOD
   await prisma.toBudget.update({
     where: {
       periodId_userId: {
-        periodId: 2,
+        periodId: period.id,
         userId: user.id,
       },
     },

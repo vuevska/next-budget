@@ -7,6 +7,7 @@ import {
   createSuccessResponse,
 } from "@/app/lib/auth";
 import { createTransactionSchema } from "@/app/lib/validationSchema";
+import { getOrCreateCurrentPeriod } from "@/app/lib/data/budget";
 
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
@@ -43,6 +44,8 @@ export async function POST(request: NextRequest) {
     return createErrorResponse("Account not found", 404);
   }
 
+  const period = await getOrCreateCurrentPeriod();
+
   const transaction = await prisma.transaction.create({
     data: {
       amount,
@@ -73,7 +76,7 @@ export async function POST(request: NextRequest) {
   const existingToBudget = await prisma.toBudget.findUnique({
     where: {
       periodId_userId: {
-        periodId: 2,
+        periodId: period.id,
         userId: user.id,
       },
     },
@@ -91,7 +94,7 @@ export async function POST(request: NextRequest) {
   } else {
     await prisma.toBudget.create({
       data: {
-        periodId: 2,
+        periodId: period.id,
         userId: user.id,
         amount: body.amount,
       },
@@ -102,11 +105,10 @@ export async function POST(request: NextRequest) {
     data: { amount: updatedAmount },
   });
 
-  //TODO CHANGE TO ACTUAL PERIOD
   await prisma.toBudget.update({
     where: {
       periodId_userId: {
-        periodId: 2,
+        periodId: period.id,
         userId: user.id,
       },
     },

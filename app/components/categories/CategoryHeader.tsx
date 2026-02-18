@@ -6,19 +6,58 @@ type CategoryHeaderProps = Readonly<{
   amount: number;
   setShowBudgetModal: () => void;
   setShowAddCategory: () => void;
+  month: number;
+  year: number;
+  onPrevMonth: () => void;
+  onNextMonth: () => void;
 }>;
+
+const monthNames = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
 
 const CategoryHeader = ({
   amount,
   setShowBudgetModal,
   setShowAddCategory,
+  month,
+  year,
+  onPrevMonth,
+  onNextMonth,
 }: CategoryHeaderProps) => {
+  const monthLabel = `${monthNames[month - 1]} ${year}`;
+
   return (
     <div className="mb-8 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
       <div className="flex-shrink-0">
-        <h1 className="text-4xl font-bold text-slate-900 mt-2">
-          February 2026
-        </h1>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={onPrevMonth}
+            className="px-2 py-1 text-sm bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg"
+          >
+            ◀
+          </Button>
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mt-1">
+            {monthLabel}
+          </h1>
+          <Button
+            onClick={onNextMonth}
+            className="px-2 py-1 text-sm bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg"
+          >
+            ▶
+          </Button>
+        </div>
         <p className="text-slate-600 text-sm mt-1">
           Manage your spending categories
         </p>

@@ -6,6 +6,7 @@ import {
   createSuccessResponse,
 } from "@/app/lib/auth";
 import { createAccountTypeSchema } from "@/app/lib/validationSchema";
+import { getOrCreateCurrentPeriod } from "@/app/lib/data/budget";
 
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
@@ -28,6 +29,8 @@ export async function POST(request: NextRequest) {
       },
     });
     if (body.amount > 0) {
+      const period = await getOrCreateCurrentPeriod();
+
       await tx.transaction.create({
         data: {
           amount: body.amount,
@@ -42,7 +45,7 @@ export async function POST(request: NextRequest) {
       const existingToBudget = await tx.toBudget.findUnique({
         where: {
           periodId_userId: {
-            periodId: 2,
+            periodId: period.id,
             userId: user.id,
           },
         },
@@ -52,7 +55,7 @@ export async function POST(request: NextRequest) {
         await tx.toBudget.update({
           where: {
             periodId_userId: {
-              periodId: 2,
+              periodId: period.id,
               userId: user.id,
             },
           },
@@ -65,7 +68,7 @@ export async function POST(request: NextRequest) {
       } else {
         await tx.toBudget.create({
           data: {
-            periodId: 2,
+            periodId: period.id,
             userId: user.id,
             amount: body.amount,
           },

@@ -49,6 +49,10 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
       setMoveFromSubCategoryId(subCategory.id);
       setShowMoveBudgetModal(true);
     };
+    const now = new Date();
+    const [activeMonth, setActiveMonth] = useState(now.getMonth() + 1);
+    const [activeYear, setActiveYear] = useState(now.getFullYear());
+    const [toBudgetAmount] = useState(toBeBudgeted?.amount ?? 0);
     const sensors = useSensors(
       useSensor(PointerSensor, {
         activationConstraint: {
@@ -120,6 +124,26 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
       router.refresh();
     };
 
+    const handlePrevMonth = () => {
+      setActiveMonth((prev) => {
+        if (prev === 1) {
+          setActiveYear((y) => y - 1);
+          return 12;
+        }
+        return prev - 1;
+      });
+    };
+
+    const handleNextMonth = () => {
+      setActiveMonth((prev) => {
+        if (prev === 12) {
+          setActiveYear((y) => y + 1);
+          return 1;
+        }
+        return prev + 1;
+      });
+    };
+
     const moveBudget = async (
       amount: number,
       fromSubCategoryId: number,
@@ -172,9 +196,13 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
       <div className="w-full min-h-full bg-gradient-to-br from-slate-50 via-white to-slate-50 p-8">
         {/* Header Section */}
         <CategoryHeader
-          amount={toBeBudgeted?.amount ?? 0}
+          amount={toBudgetAmount}
           setShowBudgetModal={() => setShowBudgetModal(true)}
           setShowAddCategory={() => setShowAddCategory(!showAddCategory)}
+          month={activeMonth}
+          year={activeYear}
+          onPrevMonth={handlePrevMonth}
+          onNextMonth={handleNextMonth}
         />
 
         {/* Add Category Form */}
@@ -211,7 +239,7 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
         <ToBudgetModal
           isOpen={showBudgetModal}
           onClose={() => setShowBudgetModal(false)}
-          toBeBudgeted={toBeBudgeted?.amount ?? 0}
+          toBeBudgeted={toBudgetAmount}
           categories={categoryList}
           onSuccess={handleBudgetSuccess}
         />
