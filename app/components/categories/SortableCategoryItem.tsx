@@ -1,7 +1,7 @@
 "use client";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Category, SubCategory } from "@prisma/client";
+import { SubCategory, SubCategoryPeriod } from "@prisma/client";
 import { FaGripVertical, FaWallet, FaEllipsisH } from "react-icons/fa";
 import { IoMdAdd } from "react-icons/io";
 import AddSubCategoryForm from "./AddSubCategoryForm";
@@ -17,7 +17,11 @@ export function SortableCategoryItem({
   category: any;
   expandedAddSubCategory: number | null;
   onToggleAddSubCategory: (categoryId: number) => void;
-  onAddSubCategory: (categoryId: number, subCategory: SubCategory) => void;
+  onAddSubCategory: (
+    categoryId: number,
+    subCategory: SubCategory,
+    subCategoryPeriod: SubCategoryPeriod,
+  ) => void;
   onAccountClick?: (id: number) => void;
   onBudgetedClick?: (subCategory: any) => void;
 }>) {

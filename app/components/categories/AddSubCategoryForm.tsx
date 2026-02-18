@@ -1,6 +1,6 @@
 "use client";
 
-import { SubCategory } from "@prisma/client";
+import { SubCategory, SubCategoryPeriod } from "@prisma/client";
 import { IoMdClose } from "react-icons/io";
 import { createSubCategorySchema } from "@/app/lib/validationSchema";
 import z from "zod";
@@ -15,7 +15,7 @@ type SubCategoryFormValues = z.infer<typeof createSubCategorySchema>;
 
 type AddSubCategoryFormProps = Readonly<{
   categoryId: number;
-  onAddSubCategory: (categoryId: number, subCategory: SubCategory) => void;
+  onAddSubCategory: (categoryId: number, subCategory: SubCategory, subCategoryPeriod: SubCategoryPeriod) => void;
   onCancel: () => void;
 }>;
 
@@ -37,7 +37,7 @@ export default function AddSubCategoryForm({
   const onSubmit = async (data: SubCategoryFormValues) => {
     try {
       const result = await createSubCategory(categoryId, data.name);
-      onAddSubCategory(categoryId, result.subCategory);
+      onAddSubCategory(categoryId, result.subCategory, result.subCategoryPeriod);
     } catch (err: any) {
       setError("root", {
         type: "manual",

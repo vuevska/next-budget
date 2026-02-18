@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState, forwardRef } from "react";
-import { Category, SubCategory, ToBudget } from "@prisma/client";
+import {
+  Category,
+  SubCategory,
+  SubCategoryPeriod,
+  ToBudget,
+} from "@prisma/client";
 import {
   closestCenter,
   KeyboardSensor,
@@ -23,18 +28,12 @@ import CategoryHeader from "./CategoryHeader";
 import EmptyCategories from "./EmptyCategories";
 import CategoryTable from "./CategoryTable";
 
-type SubCategoryWithBudgeted = SubCategory & { budgeted: number };
-type SubCategoryBudgetView = SubCategory & {
-  periodBudgeted?: number;
-  periodSpent?: number;
-  rollover?: number;
-  available?: number;
+export type CategoryBudgetView = Category & {
+  SubCategory: SubCategoryPeriod[];
 };
 
-type CategoryBudgetView = Category & { SubCategory: SubCategoryBudgetView[] };
-
-type CategoryListProps = Readonly<{
-  categories: (Category & { SubCategory: SubCategory[] })[];
+export type CategoryListProps = Readonly<{
+  categories: CategoryBudgetView[];
   onAccountClick?: (id: number) => void;
   toBeBudgeted: ToBudget | null;
 }>;
@@ -91,9 +90,7 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
       }),
     );
 
-    const handleAddCategory = (
-      newCategory: Category & { SubCategory: SubCategory[] },
-    ) => {
+    const handleAddCategory = (newCategory: CategoryBudgetView) => {
       setCategoryList([newCategory, ...categoryList]);
       setShowAddCategory(false);
       router.refresh();
@@ -102,11 +99,24 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
     const handleAddSubCategory = (
       categoryId: number,
       newSubCategory: SubCategory,
+      newSubCategoryPeriod: SubCategoryPeriod,
     ) => {
+      const subCategoryWithBudget: SubCategoryPeriod = {
+        ...newSubCategory,
+        budgeted: 0,
+        spent: 0,
+        periodId: activeMonth,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        subCategoryId: newSubCategory.id,
+      };
       setCategoryList(
         categoryList.map((cat) =>
           cat.id === categoryId
-            ? { ...cat, SubCategory: [...cat.SubCategory, newSubCategory] }
+            ? {
+                ...cat,
+                SubCategory: [...cat.SubCategory, subCategoryWithBudget],
+              }
             : cat,
         ),
       );
@@ -134,7 +144,7 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
 
     const handleBudgetSuccess = async (
       allocatedAmount: number,
-      updatedSubCategory?: SubCategoryWithBudgeted,
+      updatedSubCategory?: SubCategoryPeriod,
     ) => {
       await refreshSnapshot(activeMonth, activeYear);
     };

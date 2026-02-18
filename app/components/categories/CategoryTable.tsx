@@ -10,7 +10,7 @@ import {
 } from "@dnd-kit/sortable";
 import { SortableCategoryItem } from "./SortableCategoryItem";
 import MoveBudgetModal from "./MoveBudgetModal";
-import { SubCategory } from "@prisma/client";
+import { SubCategory, SubCategoryPeriod } from "@prisma/client";
 
 type CategoryTableProps = Readonly<{
   categoryList: any[];
@@ -21,6 +21,7 @@ type CategoryTableProps = Readonly<{
   handleAddSubCategory: (
     categoryId: number,
     newSubCategory: SubCategory,
+    newSubCategoryPeriod: SubCategoryPeriod,
   ) => void;
   handleBudgetedClick: (subCategory: any) => void;
   showMoveBudgetModal: boolean;

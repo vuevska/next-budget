@@ -1,4 +1,3 @@
-import { Category, SubCategory } from "@prisma/client";
 import { createCategory } from "@/app/lib/services/category";
 import { IoMdClose } from "react-icons/io";
 import z from "zod";
@@ -8,11 +7,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Label } from "@radix-ui/themes/components/context-menu";
 import { Button } from "@radix-ui/themes";
 import ErrorMessage from "../ErrorMessage";
+import { CategoryBudgetView } from "./CategoryList";
 
 type CategoryFormValues = z.infer<typeof createCategorySchema>;
 
 type AddCategoryFormProps = Readonly<{
-  onAddCategory: (category: Category & { SubCategory: SubCategory[] }) => void;
+  onAddCategory: (category: CategoryBudgetView) => void;
   onCancel: () => void;
 }>;
 

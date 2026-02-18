@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import { Category, SubCategory } from "@prisma/client";
 import { IoMdClose } from "react-icons/io";
 import Portal from "../Portal";
 import FormattedAmount from "../FormattedAmount";
@@ -12,6 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import ErrorMessage from "../ErrorMessage";
 import { allocateBudget } from "@/app/lib/services/budget";
 import { z } from "zod";
+import { CategoryBudgetView } from "../categories/CategoryList";
 
 export type BudgetAmountInput = z.infer<typeof budgetAmountInput>;
 
@@ -19,7 +19,7 @@ type ToBudgetModalProps = Readonly<{
   isOpen: boolean;
   onClose: () => void;
   toBeBudgeted: number;
-  categories: (Category & { SubCategory: SubCategory[] })[];
+  categories: CategoryBudgetView[];
   onSuccess: (amount: number, updatedSubCategory?: any) => void;
   month: number;
   year: number;

@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  await prisma.subCategoryPeriod.create({
+  const subCategoryPeriod = await prisma.subCategoryPeriod.create({
     data: {
       periodId: period.id,
       subCategoryId: subCategory.id,
@@ -59,5 +59,5 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  return createSuccessResponse(subCategory, 201);
+  return createSuccessResponse({ subCategory, subCategoryPeriod }, 201);
 }
