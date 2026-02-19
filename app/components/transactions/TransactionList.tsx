@@ -81,7 +81,7 @@ export default function TransactionList({
 
     try {
       const response = await deleteTransaction(id);
-      if (response?.data?.success) {
+      if (response?.status === 200) {
         setTransactions((prev) => prev.filter((t) => t.id !== id));
 
         router.refresh();

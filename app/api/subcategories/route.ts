@@ -8,7 +8,7 @@ import {
 } from "@/app/lib/auth";
 import { getOrCreateCurrentPeriod } from "@/app/lib/data/budget";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const authResult = await requireAuth();
   if (authResult instanceof NextResponse) return authResult;
   const user = authResult;

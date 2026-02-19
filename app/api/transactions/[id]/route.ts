@@ -34,7 +34,10 @@ export async function GET(
   return createSuccessResponse(transactions, 200);
 }
 
-export async function DELETE({ params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const authResult = await requireAuth();
   if (authResult instanceof NextResponse) return authResult;
 
