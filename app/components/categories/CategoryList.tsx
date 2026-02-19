@@ -150,23 +150,21 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
     };
 
     const handlePrevMonth = () => {
-      setActiveMonth((prev) => {
-        if (prev === 1) {
-          setActiveYear((y) => y - 1);
-          return 12;
-        }
-        return prev - 1;
-      });
+      if (activeMonth === 1) {
+        setActiveMonth(12);
+        setActiveYear((y) => y - 1);
+      } else {
+        setActiveMonth((m) => m - 1);
+      }
     };
 
     const handleNextMonth = () => {
-      setActiveMonth((prev) => {
-        if (prev === 12) {
-          setActiveYear((y) => y + 1);
-          return 1;
-        }
-        return prev + 1;
-      });
+      if (activeMonth === 12) {
+        setActiveMonth(1);
+        setActiveYear((y) => y + 1);
+      } else {
+        setActiveMonth((m) => m + 1);
+      }
     };
 
     const moveBudget = async (
