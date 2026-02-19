@@ -68,6 +68,10 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
       toBeBudgeted?.amount ?? 0,
     );
 
+    useEffect(() => {
+      setToBudgetAmount(toBeBudgeted?.amount ?? 0);
+    }, [toBeBudgeted]);
+
     const refreshSnapshot = async (month: number, year: number) => {
       const snapshot = await getBudgetPeriodSnapshot(month, year);
       setCategoryList(snapshot.categories);
