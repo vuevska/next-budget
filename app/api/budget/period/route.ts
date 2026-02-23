@@ -5,7 +5,7 @@ import {
   createSuccessResponse,
   requireAuth,
 } from "@/app/lib/auth";
-import { getOrCreatePeriod } from "@/app/lib/data/budget";
+import { getOrCreatePeriod, getOrCreateToBudget } from "@/app/lib/data/budget";
 
 function parseIntParam(value: string | null) {
   if (!value) return null;
@@ -29,20 +29,7 @@ export async function GET(req: NextRequest) {
 
   const period = await getOrCreatePeriod(month, year);
 
-  const toBudget = await prisma.toBudget.upsert({
-    where: {
-      periodId_userId: {
-        periodId: period.id,
-        userId: user.id,
-      },
-    },
-    update: {},
-    create: {
-      periodId: period.id,
-      userId: user.id,
-      amount: 0,
-    },
-  });
+  const toBudget = await getOrCreateToBudget(user.id, period);
 
   const categories = await prisma.category.findMany({
     where: { userId: user.id },

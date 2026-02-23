@@ -6,7 +6,7 @@ import {
   requireAuth,
   verifySubCategoryOwnership,
 } from "@/app/lib/auth";
-import { getOrCreatePeriod } from "@/app/lib/data/budget";
+import { getOrCreatePeriod, getOrCreateToBudget, getFuturePeriodIds } from "@/app/lib/data/budget";
 
 export async function POST(req: NextRequest) {
   const authResult = await requireAuth();
@@ -35,30 +35,13 @@ export async function POST(req: NextRequest) {
     currentDate.getFullYear(),
   );
 
-  //TODO: allocate budget in other months that the current one
-  //   const period = await getOrCreatePeriod(
-  //   month ?? currentDate.getMonth() + 1,
-  //   year ?? currentDate.getFullYear(),
-  // );
-
-  const toBudget = await prisma.toBudget.upsert({
-    where: {
-      periodId_userId: {
-        periodId: period.id,
-        userId: user.id,
-      },
-    },
-    update: {},
-    create: {
-      periodId: period.id,
-      userId: user.id,
-      amount: 0,
-    },
-  });
+  const toBudget = await getOrCreateToBudget(user.id, period);
 
   if (amount > toBudget.amount) {
     return createErrorResponse("Insufficient budget to allocate", 400);
   }
+
+  const futurePeriodIds = await getFuturePeriodIds(period.month, period.year);
 
   const result = await prisma.$transaction([
     prisma.subCategoryPeriod.upsert({
@@ -78,12 +61,10 @@ export async function POST(req: NextRequest) {
         spent: 0,
       },
     }),
-    prisma.toBudget.update({
+    prisma.toBudget.updateMany({
       where: {
-        periodId_userId: {
-          periodId: period.id,
-          userId: user.id,
-        },
+        userId: user.id,
+        periodId: { in: futurePeriodIds },
       },
       data: {
         amount: {

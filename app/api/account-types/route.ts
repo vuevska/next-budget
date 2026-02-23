@@ -6,7 +6,7 @@ import {
   createSuccessResponse,
 } from "@/app/lib/auth";
 import { createAccountTypeSchema } from "@/app/lib/validationSchema";
-import { getOrCreateCurrentPeriod } from "@/app/lib/data/budget";
+import { getOrCreateCurrentPeriod, getFuturePeriodIds } from "@/app/lib/data/budget";
 
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
@@ -51,13 +51,13 @@ export async function POST(request: NextRequest) {
         },
       });
 
+      const futurePeriodIds = await getFuturePeriodIds(period.month, period.year);
+
       if (existingToBudget) {
-        await tx.toBudget.update({
+        await tx.toBudget.updateMany({
           where: {
-            periodId_userId: {
-              periodId: period.id,
-              userId: user.id,
-            },
+            userId: user.id,
+            periodId: { in: futurePeriodIds },
           },
           data: {
             amount: {
@@ -73,6 +73,22 @@ export async function POST(request: NextRequest) {
             amount: body.amount,
           },
         });
+        
+        // Update any existing future periods with the new balance
+        const strictlyFuturePeriodIds = futurePeriodIds.filter((id) => id !== period.id);
+        if (strictlyFuturePeriodIds.length > 0) {
+          await tx.toBudget.updateMany({
+            where: {
+              userId: user.id,
+              periodId: { in: strictlyFuturePeriodIds },
+            },
+            data: {
+              amount: {
+                increment: body.amount,
+              },
+            },
+          });
+        }
       }
     }
 

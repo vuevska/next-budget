@@ -7,7 +7,7 @@ import {
   createSuccessResponse,
 } from "@/app/lib/auth";
 import { createTransactionSchema } from "@/app/lib/validationSchema";
-import { getOrCreatePeriod } from "@/app/lib/data/budget";
+import { getOrCreatePeriod, getOrCreateToBudget, getFuturePeriodIds } from "@/app/lib/data/budget";
 
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
@@ -86,20 +86,7 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const existingToBudget = await prisma.toBudget.upsert({
-    where: {
-      periodId_userId: {
-        periodId: period.id,
-        userId: user.id,
-      },
-    },
-    update: {},
-    create: {
-      periodId: period.id,
-      userId: user.id,
-      amount: 0,
-    },
-  });
+  const existingToBudget = await getOrCreateToBudget(user.id, period);
 
   let updatedAmount;
   let updatedToBudgetAmount;
@@ -115,14 +102,13 @@ export async function POST(request: NextRequest) {
   });
 
   if (isInflow) {
-    await prisma.toBudget.update({
+    const futurePeriodIds = await getFuturePeriodIds(period.month, period.year);
+    await prisma.toBudget.updateMany({
       where: {
-        periodId_userId: {
-          periodId: period.id,
-          userId: user.id,
-        },
+        userId: user.id,
+        periodId: { in: futurePeriodIds },
       },
-      data: { amount: updatedToBudgetAmount },
+      data: { amount: { increment: amount } },
     });
   }
 
