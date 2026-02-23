@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { AccountType, Transaction, SubCategory } from "@prisma/client";
 import AddTransactionModal from "./AddTransactionModal";
+import EditTransactionModal from "./EditTransactionModal";
 import {
   deleteTransaction,
   getTransactions,
@@ -20,7 +21,7 @@ type TransactionListViewProps = Readonly<{
   onBack: () => void;
 }>;
 
-type TransactionWithSubCategory = Transaction & { subCategory: SubCategory };
+type TransactionWithSubCategory = Transaction & { subCategory: SubCategory | null };
 
 export default function TransactionList({
   account,
@@ -35,6 +36,9 @@ export default function TransactionList({
   const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
   const [deleteConfirmationId, setDeleteConfirmationId] = useState<
     number | null
+  >(null);
+  const [editingTransaction, setEditingTransaction] = useState<
+    TransactionWithSubCategory | null
   >(null);
 
   useEffect(() => {
@@ -69,6 +73,18 @@ export default function TransactionList({
     setTransactions((prev) => [newTransaction, ...prev]);
 
     router.refresh();
+  };
+
+  const handleUpdateTransaction = (updatedTransaction: TransactionWithSubCategory) => {
+    setTransactions((prev) =>
+      prev.map((t) => (t.id === updatedTransaction.id ? updatedTransaction : t))
+    );
+
+    router.refresh();
+  };
+
+  const handleEditTransaction = (transaction: TransactionWithSubCategory) => {
+    setEditingTransaction(transaction);
   };
 
   const handleDeleteTransaction = async (id: number) => {
@@ -108,6 +124,7 @@ export default function TransactionList({
         transactions={transactions}
         subCategories={subCategories}
         onDelete={handleDeleteTransaction}
+        onEdit={handleEditTransaction}
       />
     );
   };
@@ -128,6 +145,17 @@ export default function TransactionList({
           accountId={account.id}
           onClose={() => setIsModalOpen(false)}
           onAdd={handleAddTransaction}
+          subCategories={subCategories}
+        />
+      )}
+
+      {editingTransaction && (
+        <EditTransactionModal
+          userId={account.userId}
+          accountId={account.id}
+          transaction={editingTransaction}
+          onClose={() => setEditingTransaction(null)}
+          onUpdate={handleUpdateTransaction}
           subCategories={subCategories}
         />
       )}

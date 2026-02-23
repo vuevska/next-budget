@@ -43,3 +43,17 @@ export async function createTransaction(data: CreateTransactionInput) {
     throw new Error("Failed to create transaction");
   }
 }
+
+export async function updateTransaction(id: number, data: any) {
+  try {
+    const res = await axios.put(`/api/transactions/${id}`, data);
+    return res.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        error.response?.data?.error || "Failed to update transaction",
+      );
+    }
+    throw new Error("Failed to update transaction");
+  }
+}

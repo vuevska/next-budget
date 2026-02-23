@@ -10,31 +10,35 @@ import { createTransactionSchema } from "@/app/lib/validationSchema";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import ErrorMessage from "../ErrorMessage";
-import { createTransaction } from "@/app/lib/services/transactions";
+import { updateTransaction } from "@/app/lib/services/transactions";
 import { useEffect, useState } from "react";
 import { getCategories } from "@/app/lib/data/category";
 
-export type CreateTransactionInput = z.infer<typeof createTransactionSchema> & {
+export type UpdateTransactionInput = z.infer<typeof createTransactionSchema> & {
   accountId: number;
 };
 
-type AddTransactionModalProps = Readonly<{
+type TransactionWithSubCategory = Transaction & { subCategory: SubCategory | null };
+
+type EditTransactionModalProps = Readonly<{
   userId: string;
   accountId: number;
+  transaction: TransactionWithSubCategory;
   onClose: () => void;
-  onAdd: (transaction: Transaction & { subCategory: SubCategory | null }) => void;
+  onUpdate: (transaction: TransactionWithSubCategory) => void;
   subCategories: SubCategory[];
   onCategoriesUpdate?: (categories: any[]) => void;
 }>;
 
-export default function AddTransactionModal({
+export default function EditTransactionModal({
   userId,
   accountId,
+  transaction,
   onClose,
-  onAdd,
+  onUpdate,
   subCategories,
   onCategoriesUpdate,
-}: AddTransactionModalProps) {
+}: EditTransactionModalProps) {
   const {
     register,
     handleSubmit,
@@ -42,11 +46,19 @@ export default function AddTransactionModal({
     setValue,
     formState: { errors, isSubmitting },
     reset,
-  } = useForm<CreateTransactionInput>({
+  } = useForm<UpdateTransactionInput>({
     resolver: zodResolver(createTransactionSchema),
+    defaultValues: {
+      amount: transaction.amount,
+      payee: transaction.payee,
+      description: transaction.description || "",
+      date: new Date(transaction.date).toISOString().split("T")[0] as any,
+      subCatId: transaction.subCatId,
+      isInflow: transaction.isInflow,
+    },
   });
 
-  const [isInflow, setIsInflow] = useState(false);
+  const [isInflow, setIsInflow] = useState(transaction.isInflow);
 
   useEffect(() => {
     if (isInflow) {
@@ -54,18 +66,17 @@ export default function AddTransactionModal({
     }
   }, [isInflow, setValue]);
 
-  const onSubmit = async (data: CreateTransactionInput) => {
+  const onSubmit = async (data: UpdateTransactionInput) => {
     try {
       const payload = {
         ...data,
         accountTypeId: accountId,
       };
-      const created = await createTransaction(payload);
+      const updated = await updateTransaction(transaction.id, payload);
 
-      onAdd(created);
+      onUpdate(updated);
 
-      // If it's an expense transaction with a subcategory, refresh categories
-      if (!data.isInflow && data.subCatId && onCategoriesUpdate) {
+      if (onCategoriesUpdate) {
         const updatedCategories = await getCategories(userId);
         onCategoriesUpdate(updatedCategories);
       }
@@ -84,10 +95,9 @@ export default function AddTransactionModal({
     <Portal>
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
         <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 border border-slate-200">
-          {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-gradient-to-r from-indigo-50 to-blue-50">
             <h2 className="text-xl font-bold text-slate-900">
-              New Transaction
+              Edit Transaction
             </h2>
             <Button
               onClick={onClose}
@@ -97,9 +107,7 @@ export default function AddTransactionModal({
             </Button>
           </div>
 
-          {/* Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
-            {/* Amount and Inflow */}
             <div>
               <div className="flex items-end gap-3 mb-2">
                 <div className="flex-1">
@@ -130,7 +138,6 @@ export default function AddTransactionModal({
               />
             </div>
 
-            {/* Payee */}
             <div>
               <Label className="block text-sm font-medium text-slate-700 mb-2">
                 Payee
@@ -144,7 +151,6 @@ export default function AddTransactionModal({
               />
             </div>
 
-            {/* Description */}
             <div>
               <Label className="block text-sm font-medium text-slate-700 mb-2">
                 Description
@@ -157,7 +163,6 @@ export default function AddTransactionModal({
               />
             </div>
 
-            {/* Date */}
             <div>
               <Label className="block text-sm font-medium text-slate-700 mb-2">
                 Date
@@ -169,7 +174,6 @@ export default function AddTransactionModal({
               />
             </div>
 
-            {/* SubCategory */}
             <select
               {...register("subCatId", { valueAsNumber: true })}
               disabled={isInflow}
@@ -183,14 +187,13 @@ export default function AddTransactionModal({
               ))}
             </select>
 
-            {/* Buttons */}
             <div className="flex gap-3 pt-4">
               <Button
                 type="submit"
                 disabled={isSubmitting}
                 className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
               >
-                {isSubmitting ? "Creating..." : "Create"}
+                {isSubmitting ? "Saving..." : "Save"}
               </Button>
               <Button
                 type="button"

@@ -129,3 +129,150 @@ export async function DELETE(
 
   return createSuccessResponse(200);
 }
+
+import { createTransactionSchema } from "@/app/lib/validationSchema";
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const authResult = await requireAuth();
+  if (authResult instanceof NextResponse) return authResult;
+
+  const user = authResult;
+
+  const resolvedParams = await params;
+  const transactionId = Number.parseInt(resolvedParams.id);
+
+  if (!transactionId) {
+    return createErrorResponse("Invalid transaction ID", 400);
+  }
+
+  const body = await request.json();
+  const validation = createTransactionSchema.safeParse(body);
+  if (!validation.success) {
+    return createErrorResponse(JSON.stringify(validation.error.format()), 400);
+  }
+
+  const {
+    amount: newAmount,
+    description,
+    payee,
+    isInflow: newIsInflow,
+    subCatId: newSubCatId,
+    accountTypeId,
+    date: newDate,
+  } = body;
+
+  const oldTransaction = await prisma.transaction.findUnique({
+    where: { id: transactionId },
+    include: { accountType: true },
+  });
+
+  if (!oldTransaction) {
+    return createErrorResponse("Transaction not found", 404);
+  }
+
+  if (oldTransaction.accountType.userId !== user.id) {
+    return createErrorResponse("Unauthorized access to account", 403);
+  }
+
+  const account = await prisma.accountType.findUnique({
+    where: { id: oldTransaction.accountTypeId, userId: user.id },
+  });
+
+  if (!account) {
+    return createErrorResponse("Unauthorized access to account", 403);
+  }
+
+  const oldPeriod = await getOrCreatePeriod(
+    oldTransaction.date.getMonth() + 1,
+    oldTransaction.date.getFullYear(),
+  );
+  await getOrCreateToBudget(user.id, oldPeriod);
+
+  let updatedAccountAmount = account.amount;
+
+  if (oldTransaction.isInflow) {
+    updatedAccountAmount -= oldTransaction.amount;
+    const futurePeriodIds = await getFuturePeriodIds(oldPeriod.month, oldPeriod.year);
+    await prisma.toBudget.updateMany({
+      where: { userId: user.id, periodId: { in: futurePeriodIds } },
+      data: { amount: { decrement: oldTransaction.amount } },
+    });
+  } else {
+    updatedAccountAmount += oldTransaction.amount;
+    if (oldTransaction.subCatId) {
+      await (prisma as any).subCategoryPeriod.upsert({
+        where: {
+          periodId_subCategoryId: {
+            periodId: oldPeriod.id,
+            subCategoryId: oldTransaction.subCatId,
+          },
+        },
+        update: { spent: { decrement: oldTransaction.amount } },
+        create: {
+          periodId: oldPeriod.id,
+          subCategoryId: oldTransaction.subCatId,
+          budgeted: 0,
+          spent: 0,
+        },
+      });
+    }
+  }
+
+  const newTxDate = new Date(newDate);
+  const updatedTransaction = await prisma.transaction.update({
+    where: { id: transactionId },
+    data: {
+      amount: newAmount,
+      description,
+      payee,
+      isInflow: newIsInflow,
+      subCatId: newSubCatId,
+      date: newTxDate,
+    },
+    include: { subCategory: true },
+  });
+
+  const newPeriod = await getOrCreatePeriod(
+    newTxDate.getMonth() + 1,
+    newTxDate.getFullYear(),
+  );
+  await getOrCreateToBudget(user.id, newPeriod);
+
+  if (newIsInflow) {
+    updatedAccountAmount += newAmount;
+    const futurePeriodIds = await getFuturePeriodIds(newPeriod.month, newPeriod.year);
+    await prisma.toBudget.updateMany({
+      where: { userId: user.id, periodId: { in: futurePeriodIds } },
+      data: { amount: { increment: newAmount } },
+    });
+  } else {
+    updatedAccountAmount -= newAmount;
+    if (newSubCatId) {
+      await (prisma as any).subCategoryPeriod.upsert({
+        where: {
+          periodId_subCategoryId: {
+            periodId: newPeriod.id,
+            subCategoryId: newSubCatId,
+          },
+        },
+        update: { spent: { increment: newAmount } },
+        create: {
+          periodId: newPeriod.id,
+          subCategoryId: newSubCatId,
+          budgeted: 0,
+          spent: newAmount,
+        },
+      });
+    }
+  }
+
+  await prisma.accountType.update({
+    where: { id: accountTypeId },
+    data: { amount: updatedAccountAmount },
+  });
+
+  return createSuccessResponse(updatedTransaction, 200);
+}

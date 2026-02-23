@@ -15,12 +15,14 @@ interface TransactionsTableProps {
   transactions: TransactionWithSubCategory[];
   subCategories: SubCategory[];
   onDelete: (id: number) => void;
+  onEdit: (transaction: TransactionWithSubCategory) => void;
 }
 
 const TransactionsTable = ({
   transactions,
   subCategories,
   onDelete,
+  onEdit,
 }: TransactionsTableProps) => {
   const { filters, handleFilterChange, clearFilters } = useTransactionFilters();
 
@@ -70,6 +72,7 @@ const TransactionsTable = ({
                   key={transaction.id}
                   transaction={transaction}
                   onDelete={onDelete}
+                  onEdit={onEdit}
                 />
               ))
             ) : (

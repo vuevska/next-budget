@@ -1,6 +1,6 @@
 import { SubCategory, Transaction } from "@prisma/client";
 import { Button } from "@radix-ui/themes";
-import { FiTrash2 } from "react-icons/fi";
+import { FiTrash2, FiEdit2 } from "react-icons/fi";
 import FormattedAmount from "../FormattedAmount";
 import { formatDate } from "@/app/lib/formatDate";
 
@@ -11,9 +11,10 @@ type TransactionWithSubCategory = Transaction & {
 interface TransactionRowProps {
   transaction: TransactionWithSubCategory;
   onDelete: (id: number) => void;
+  onEdit: (transaction: TransactionWithSubCategory) => void;
 }
 
-const TransactionRow = ({ transaction, onDelete }: TransactionRowProps) => {
+const TransactionRow = ({ transaction, onDelete, onEdit }: TransactionRowProps) => {
   return (
     <tr className="hover:bg-slate-50 transition-colors">
       <td className="px-6 py-3 text-slate-900 font-medium">
@@ -47,7 +48,14 @@ const TransactionRow = ({ transaction, onDelete }: TransactionRowProps) => {
           {transaction.isInflow ? "Inflow" : "Outflow"}
         </span>
       </td>
-      <td className="px-6 py-3 text-center">
+      <td className="px-6 py-3 text-center flex items-center justify-center gap-2">
+        <Button
+          onClick={() => onEdit(transaction)}
+          className="p-2 hover:bg-indigo-100 rounded-lg transition-colors inline-flex"
+          title="Edit transaction"
+        >
+          <FiEdit2 size={16} className="text-indigo-600" />
+        </Button>
         <Button
           onClick={() => onDelete(transaction.id)}
           className="p-2 hover:bg-red-100 rounded-lg transition-colors inline-flex"
