@@ -3,7 +3,7 @@
 import { FiX } from "react-icons/fi";
 import { Button } from "@radix-ui/themes";
 import Portal from "../Portal";
-import { Transaction, SubCategory } from "@prisma/client";
+import { Transaction, SubCategory, Payee } from "@prisma/client";
 import { Label } from "@radix-ui/themes/components/context-menu";
 import z from "zod";
 import { createTransactionSchema } from "@/app/lib/validationSchema";
@@ -13,20 +13,27 @@ import ErrorMessage from "../ErrorMessage";
 import { updateTransaction } from "@/app/lib/services/transactions";
 import { useEffect, useState } from "react";
 import { getCategories } from "@/app/lib/data/category";
+import PayeeCombobox from "./PayeeCombobox";
+import { createPayee } from "@/app/lib/services/payees";
 
 export type UpdateTransactionInput = z.infer<typeof createTransactionSchema> & {
   accountId: number;
 };
 
-type TransactionWithSubCategory = Transaction & { subCategory: SubCategory | null };
+type TransactionWithPayee = Transaction & {
+  subCategory: SubCategory | null;
+  payee: Payee;
+};
 
 type EditTransactionModalProps = Readonly<{
   userId: string;
   accountId: number;
-  transaction: TransactionWithSubCategory;
+  transaction: TransactionWithPayee;
   onClose: () => void;
-  onUpdate: (transaction: TransactionWithSubCategory) => void;
+  onUpdate: (transaction: TransactionWithPayee) => void;
   subCategories: SubCategory[];
+  payees: Payee[];
+  onPayeesUpdate: (payees: Payee[]) => void;
   onCategoriesUpdate?: (categories: any[]) => void;
 }>;
 
@@ -37,6 +44,8 @@ export default function EditTransactionModal({
   onClose,
   onUpdate,
   subCategories,
+  payees,
+  onPayeesUpdate,
   onCategoriesUpdate,
 }: EditTransactionModalProps) {
   const {
@@ -50,7 +59,7 @@ export default function EditTransactionModal({
     resolver: zodResolver(createTransactionSchema),
     defaultValues: {
       amount: transaction.amount,
-      payee: transaction.payee,
+      payeeId: transaction.payeeId,
       description: transaction.description || "",
       date: new Date(transaction.date).toISOString().split("T")[0] as any,
       subCatId: transaction.subCatId,
@@ -59,12 +68,28 @@ export default function EditTransactionModal({
   });
 
   const [isInflow, setIsInflow] = useState(transaction.isInflow);
+  const [selectedPayeeId, setSelectedPayeeId] = useState<number | null>(
+    transaction.payeeId,
+  );
 
   useEffect(() => {
     if (isInflow) {
       setValue("subCatId", null);
     }
   }, [isInflow, setValue]);
+
+  const handlePayeeChange = (payeeId: number | null) => {
+    setSelectedPayeeId(payeeId);
+    if (payeeId !== null) {
+      setValue("payeeId", payeeId, { shouldValidate: true });
+    }
+  };
+
+  const handleCreatePayee = async (name: string) => {
+    const newPayee = await createPayee(name);
+    onPayeesUpdate([...payees, newPayee]);
+    return newPayee;
+  };
 
   const onSubmit = async (data: UpdateTransactionInput) => {
     try {
@@ -138,16 +163,18 @@ export default function EditTransactionModal({
               />
             </div>
 
+            {/* Payee */}
             <div>
               <Label className="block text-sm font-medium text-slate-700 mb-2">
                 Payee
               </Label>
-              <ErrorMessage>{errors.payee?.message}</ErrorMessage>
-              <input
-                type="text"
-                {...register("payee")}
-                placeholder="e.g., Coffee Shop"
-                className="w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+              <ErrorMessage>{errors.payeeId?.message}</ErrorMessage>
+              <PayeeCombobox
+                payees={payees}
+                value={selectedPayeeId}
+                onChange={handlePayeeChange}
+                onCreatePayee={handleCreatePayee}
+                error={errors.payeeId?.message}
               />
             </div>
 

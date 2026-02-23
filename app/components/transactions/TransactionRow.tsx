@@ -1,17 +1,18 @@
-import { SubCategory, Transaction } from "@prisma/client";
+import { SubCategory, Transaction, Payee } from "@prisma/client";
 import { Button } from "@radix-ui/themes";
 import { FiTrash2, FiEdit2 } from "react-icons/fi";
 import FormattedAmount from "../FormattedAmount";
 import { formatDate } from "@/app/lib/formatDate";
 
-type TransactionWithSubCategory = Transaction & {
+type TransactionWithRelations = Transaction & {
   subCategory: SubCategory | null;
+  payee: Payee;
 };
 
 interface TransactionRowProps {
-  transaction: TransactionWithSubCategory;
+  transaction: TransactionWithRelations;
   onDelete: (id: number) => void;
-  onEdit: (transaction: TransactionWithSubCategory) => void;
+  onEdit: (transaction: TransactionWithRelations) => void;
 }
 
 const TransactionRow = ({ transaction, onDelete, onEdit }: TransactionRowProps) => {
@@ -20,7 +21,7 @@ const TransactionRow = ({ transaction, onDelete, onEdit }: TransactionRowProps) 
       <td className="px-6 py-3 text-slate-900 font-medium">
         {formatDate(transaction.date)}
       </td>
-      <td className="px-6 py-3 text-slate-900">{transaction.payee}</td>
+      <td className="px-6 py-3 text-slate-900">{transaction.payee.name}</td>
       <td className="px-6 py-3 text-slate-600">{transaction.description}</td>
       <td className="px-6 py-3 text-slate-600">
         <span className="inline-block px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-medium">

@@ -3,7 +3,7 @@
 import { FiX } from "react-icons/fi";
 import { Button } from "@radix-ui/themes";
 import Portal from "../Portal";
-import { Transaction, SubCategory } from "@prisma/client";
+import { Transaction, SubCategory, Payee } from "@prisma/client";
 import { Label } from "@radix-ui/themes/components/context-menu";
 import z from "zod";
 import { createTransactionSchema } from "@/app/lib/validationSchema";
@@ -13,17 +13,26 @@ import ErrorMessage from "../ErrorMessage";
 import { createTransaction } from "@/app/lib/services/transactions";
 import { useEffect, useState } from "react";
 import { getCategories } from "@/app/lib/data/category";
+import PayeeCombobox from "./PayeeCombobox";
+import { createPayee } from "@/app/lib/services/payees";
 
 export type CreateTransactionInput = z.infer<typeof createTransactionSchema> & {
   accountId: number;
+};
+
+type TransactionWithPayee = Transaction & {
+  subCategory: SubCategory | null;
+  payee: Payee;
 };
 
 type AddTransactionModalProps = Readonly<{
   userId: string;
   accountId: number;
   onClose: () => void;
-  onAdd: (transaction: Transaction & { subCategory: SubCategory | null }) => void;
+  onAdd: (transaction: TransactionWithPayee) => void;
   subCategories: SubCategory[];
+  payees: Payee[];
+  onPayeesUpdate: (payees: Payee[]) => void;
   onCategoriesUpdate?: (categories: any[]) => void;
 }>;
 
@@ -33,6 +42,8 @@ export default function AddTransactionModal({
   onClose,
   onAdd,
   subCategories,
+  payees,
+  onPayeesUpdate,
   onCategoriesUpdate,
 }: AddTransactionModalProps) {
   const {
@@ -47,12 +58,26 @@ export default function AddTransactionModal({
   });
 
   const [isInflow, setIsInflow] = useState(false);
+  const [selectedPayeeId, setSelectedPayeeId] = useState<number | null>(null);
 
   useEffect(() => {
     if (isInflow) {
       setValue("subCatId", null);
     }
   }, [isInflow, setValue]);
+
+  const handlePayeeChange = (payeeId: number | null) => {
+    setSelectedPayeeId(payeeId);
+    if (payeeId !== null) {
+      setValue("payeeId", payeeId, { shouldValidate: true });
+    }
+  };
+
+  const handleCreatePayee = async (name: string) => {
+    const newPayee = await createPayee(name);
+    onPayeesUpdate([...payees, newPayee]);
+    return newPayee;
+  };
 
   const onSubmit = async (data: CreateTransactionInput) => {
     try {
@@ -71,6 +96,7 @@ export default function AddTransactionModal({
       }
 
       reset();
+      setSelectedPayeeId(null);
       onClose();
     } catch (err: any) {
       setError("root", {
@@ -135,12 +161,13 @@ export default function AddTransactionModal({
               <Label className="block text-sm font-medium text-slate-700 mb-2">
                 Payee
               </Label>
-              <ErrorMessage>{errors.payee?.message}</ErrorMessage>
-              <input
-                type="text"
-                {...register("payee")}
-                placeholder="e.g., Coffee Shop"
-                className="w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+              <ErrorMessage>{errors.payeeId?.message}</ErrorMessage>
+              <PayeeCombobox
+                payees={payees}
+                value={selectedPayeeId}
+                onChange={handlePayeeChange}
+                onCreatePayee={handleCreatePayee}
+                error={errors.payeeId?.message}
               />
             </div>
 

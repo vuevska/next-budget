@@ -20,7 +20,7 @@ export const createSubCategorySchema = z.object({
 export const createTransactionSchema = z
   .object({
     amount: z.number().gt(-1, "Amount must be a positive number."),
-    payee: z.string().min(1, "Payee is required.").max(255),
+    payeeId: z.number({ required_error: "Payee is required." }).int(),
     description: z.string().optional(),
     date: z.coerce.date({
       required_error: "Date is required",
@@ -44,4 +44,8 @@ export const moveBudgetSchema = z.object({
   amount: z.number().gt(0, "Amount must be greater than 0"),
   fromSubCategoryId: z.number(),
   toSubCategoryId: z.number(),
+});
+
+export const createPayeeSchema = z.object({
+  name: z.string().min(1, "Name is required.").max(255),
 });

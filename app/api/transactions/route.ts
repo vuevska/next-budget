@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
   const {
     amount,
     description,
-    payee,
+    payeeId,
     isInflow,
     subCatId,
     accountTypeId,
@@ -44,6 +44,15 @@ export async function POST(request: NextRequest) {
     return createErrorResponse("Account not found", 404);
   }
 
+  // Verify the payee belongs to this user
+  const payee = await prisma.payee.findUnique({
+    where: { id: payeeId },
+  });
+
+  if (!payee || payee.userId !== user.id) {
+    return createErrorResponse("Invalid payee", 400);
+  }
+
   const txDate = new Date(date);
   const period = await getOrCreatePeriod(
     txDate.getMonth() + 1,
@@ -54,7 +63,7 @@ export async function POST(request: NextRequest) {
     data: {
       amount,
       description,
-      payee,
+      payeeId,
       isInflow,
       subCatId,
       accountTypeId,
@@ -62,6 +71,7 @@ export async function POST(request: NextRequest) {
     },
     include: {
       subCategory: true,
+      payee: true,
     },
   });
 

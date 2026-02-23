@@ -31,11 +31,26 @@ export async function POST(request: NextRequest) {
     if (body.amount > 0) {
       const period = await getOrCreateCurrentPeriod();
 
+      // Find or create the "Starting Balance" payee for this user
+      const startingBalancePayee = await tx.payee.upsert({
+        where: {
+          name_userId: {
+            name: "Starting Balance",
+            userId: user.id,
+          },
+        },
+        update: {},
+        create: {
+          name: "Starting Balance",
+          userId: user.id,
+        },
+      });
+
       await tx.transaction.create({
         data: {
           amount: body.amount,
           description: "Starting balance",
-          payee: "Starting Balance",
+          payeeId: startingBalancePayee.id,
           isInflow: true,
           accountTypeId: account.id,
           date: new Date(),

@@ -1,4 +1,4 @@
-import { Transaction, SubCategory } from "@prisma/client";
+import { Transaction, SubCategory, Payee } from "@prisma/client";
 
 export interface FilterState {
   dateFrom: string;
@@ -11,8 +11,9 @@ export interface FilterState {
   type: string;
 }
 
-type TransactionWithSubCategory = Transaction & {
+type TransactionWithRelations = Transaction & {
   subCategory: SubCategory | null;
+  payee: Payee;
 };
 
 export const matchesDateRange = (
@@ -45,7 +46,7 @@ export const matchesDescription = (
 };
 
 export const matchesCategory = (
-  transaction: TransactionWithSubCategory,
+  transaction: TransactionWithRelations,
   filters: FilterState,
 ): boolean => {
   if (!filters.category) return true;
@@ -79,13 +80,13 @@ export const matchesType = (
 };
 
 export const filterTransactions = (
-  transactions: TransactionWithSubCategory[],
+  transactions: TransactionWithRelations[],
   filters: FilterState,
-): TransactionWithSubCategory[] => {
+): TransactionWithRelations[] => {
   return transactions.filter((transaction) => {
     return (
       matchesDateRange(transaction.date, filters) &&
-      matchesPayee(transaction.payee, filters) &&
+      matchesPayee(transaction.payee.name, filters) &&
       matchesDescription(transaction.description, filters) &&
       matchesCategory(transaction, filters) &&
       matchesAmountRange(transaction.amount, filters) &&

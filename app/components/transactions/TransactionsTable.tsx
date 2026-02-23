@@ -1,21 +1,22 @@
 "use client";
 
-import { SubCategory, Transaction } from "@prisma/client";
+import { SubCategory, Transaction, Payee } from "@prisma/client";
 import { useMemo } from "react";
 import FilterRow from "./FilterRow";
 import TransactionRow from "./TransactionRow";
 import { useTransactionFilters } from "./filter/useTransactionFilters";
 import { filterTransactions } from "./filter/transactionFilters";
 
-type TransactionWithSubCategory = Transaction & {
+type TransactionWithRelations = Transaction & {
   subCategory: SubCategory | null;
+  payee: Payee;
 };
 
 interface TransactionsTableProps {
-  transactions: TransactionWithSubCategory[];
+  transactions: TransactionWithRelations[];
   subCategories: SubCategory[];
   onDelete: (id: number) => void;
-  onEdit: (transaction: TransactionWithSubCategory) => void;
+  onEdit: (transaction: TransactionWithRelations) => void;
 }
 
 const TransactionsTable = ({

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { AccountType, Transaction, SubCategory } from "@prisma/client";
+import { AccountType, Transaction, SubCategory, Payee } from "@prisma/client";
 import AddTransactionModal from "./AddTransactionModal";
 import EditTransactionModal from "./EditTransactionModal";
 import {
@@ -12,6 +12,7 @@ import LoadingTransactions from "./LoadingTransactions";
 import EmptyTransactions from "./EmptyTransactions";
 import TransactionsTable from "./TransactionsTable";
 import { getSubCategories } from "@/app/lib/services/sub-category";
+import { getPayees } from "@/app/lib/services/payees";
 import DeleteTransactionModal from "./DeleteTransactionModal";
 import { useRouter } from "next/navigation";
 import TransactionsTableHeader from "./TransactionsTableHeader";
@@ -21,7 +22,10 @@ type TransactionListViewProps = Readonly<{
   onBack: () => void;
 }>;
 
-type TransactionWithSubCategory = Transaction & { subCategory: SubCategory | null };
+type TransactionWithRelations = Transaction & {
+  subCategory: SubCategory | null;
+  payee: Payee;
+};
 
 export default function TransactionList({
   account,
@@ -29,16 +33,17 @@ export default function TransactionList({
 }: TransactionListViewProps) {
   const router = useRouter();
   const [transactions, setTransactions] = useState<
-    TransactionWithSubCategory[]
+    TransactionWithRelations[]
   >([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
+  const [payees, setPayees] = useState<Payee[]>([]);
   const [deleteConfirmationId, setDeleteConfirmationId] = useState<
     number | null
   >(null);
   const [editingTransaction, setEditingTransaction] = useState<
-    TransactionWithSubCategory | null
+    TransactionWithRelations | null
   >(null);
 
   useEffect(() => {
@@ -69,13 +74,26 @@ export default function TransactionList({
     fetchSubcategories();
   }, []);
 
-  const handleAddTransaction = (newTransaction: TransactionWithSubCategory) => {
+  useEffect(() => {
+    const fetchPayees = async () => {
+      try {
+        const data = await getPayees();
+        setPayees(data);
+      } catch (err) {
+        console.error("Failed to load payees", err);
+      }
+    };
+
+    fetchPayees();
+  }, []);
+
+  const handleAddTransaction = (newTransaction: TransactionWithRelations) => {
     setTransactions((prev) => [newTransaction, ...prev]);
 
     router.refresh();
   };
 
-  const handleUpdateTransaction = (updatedTransaction: TransactionWithSubCategory) => {
+  const handleUpdateTransaction = (updatedTransaction: TransactionWithRelations) => {
     setTransactions((prev) =>
       prev.map((t) => (t.id === updatedTransaction.id ? updatedTransaction : t))
     );
@@ -83,7 +101,7 @@ export default function TransactionList({
     router.refresh();
   };
 
-  const handleEditTransaction = (transaction: TransactionWithSubCategory) => {
+  const handleEditTransaction = (transaction: TransactionWithRelations) => {
     setEditingTransaction(transaction);
   };
 
@@ -146,6 +164,8 @@ export default function TransactionList({
           onClose={() => setIsModalOpen(false)}
           onAdd={handleAddTransaction}
           subCategories={subCategories}
+          payees={payees}
+          onPayeesUpdate={setPayees}
         />
       )}
 
@@ -157,6 +177,8 @@ export default function TransactionList({
           onClose={() => setEditingTransaction(null)}
           onUpdate={handleUpdateTransaction}
           subCategories={subCategories}
+          payees={payees}
+          onPayeesUpdate={setPayees}
         />
       )}
 

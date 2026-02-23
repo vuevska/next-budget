@@ -27,7 +27,10 @@ export async function GET(
 
   const transactions = await (prisma.transaction.findMany as any)({
     where: { accountTypeId: accountTypeId },
-    include: { subCategory: { include: { category: true } } },
+    include: {
+      subCategory: { include: { category: true } },
+      payee: true,
+    },
     orderBy: { date: "desc" },
   });
 
@@ -157,7 +160,7 @@ export async function PUT(
   const {
     amount: newAmount,
     description,
-    payee,
+    payeeId: newPayeeId,
     isInflow: newIsInflow,
     subCatId: newSubCatId,
     accountTypeId,
@@ -183,6 +186,15 @@ export async function PUT(
 
   if (!account) {
     return createErrorResponse("Unauthorized access to account", 403);
+  }
+
+  // Verify the payee belongs to this user
+  const payee = await prisma.payee.findUnique({
+    where: { id: newPayeeId },
+  });
+
+  if (!payee || payee.userId !== user.id) {
+    return createErrorResponse("Invalid payee", 400);
   }
 
   const oldPeriod = await getOrCreatePeriod(
@@ -227,12 +239,15 @@ export async function PUT(
     data: {
       amount: newAmount,
       description,
-      payee,
+      payeeId: newPayeeId,
       isInflow: newIsInflow,
       subCatId: newSubCatId,
       date: newTxDate,
     },
-    include: { subCategory: true },
+    include: {
+      subCategory: true,
+      payee: true,
+    },
   });
 
   const newPeriod = await getOrCreatePeriod(

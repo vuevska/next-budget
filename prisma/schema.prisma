@@ -54,6 +54,17 @@ model User {
   AccountType   AccountType[]
   Category      Category[]
   ToBudget      ToBudget[]
+  Payee         Payee[]
+}
+
+model Payee {
+  id          Int           @id @default(autoincrement())
+  name        String        @db.VarChar(255)
+  userId      String
+  user        User          @relation(fields: [userId], references: [id])
+  Transaction Transaction[]
+
+  @@unique([name, userId])
 }
 
 model VerificationToken {
@@ -103,7 +114,8 @@ model Transaction {
   amount        Float        @db.Double
   isInflow      Boolean
   description   String       @db.VarChar(255)
-  payee         String       @db.VarChar(255)
+  payeeId       Int
+  payee         Payee        @relation(fields: [payeeId], references: [id])
   date          DateTime     @default(now())
   subCatId      Int?
   subCategory   SubCategory? @relation(fields: [subCatId], references: [id])
