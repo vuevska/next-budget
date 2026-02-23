@@ -39,10 +39,11 @@ export async function POST(request: NextRequest) {
             userId: user.id,
           },
         },
-        update: {},
+        update: { isSystem: true },
         create: {
           name: "Starting Balance",
           userId: user.id,
+          isSystem: true,
         },
       });
 

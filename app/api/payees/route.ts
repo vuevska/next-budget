@@ -14,7 +14,7 @@ export async function GET() {
   const user = authResult;
 
   const payees = await prisma.payee.findMany({
-    where: { userId: user.id },
+    where: { userId: user.id, isSystem: false },
     orderBy: { name: "asc" },
   });
 

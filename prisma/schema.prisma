@@ -60,6 +60,7 @@ model User {
 model Payee {
   id          Int           @id @default(autoincrement())
   name        String        @db.VarChar(255)
+  isSystem    Boolean       @default(false)
   userId      String
   user        User          @relation(fields: [userId], references: [id])
   Transaction Transaction[]
