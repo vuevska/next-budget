@@ -29,6 +29,8 @@ type CategoryTableProps = Readonly<{
   moveFromSubCategoryId: number | null;
   moveBudget: (amount: number, fromId: number, toId: number) => Promise<void>;
   handleDragEnd: (event: DragEndEvent) => void;
+  onCategoryRenamed?: (categoryId: number, newName: string) => void;
+  onSubCategoryRenamed?: (subCategoryId: number, newName: string) => void;
 }>;
 
 const CategoryTable = ({
@@ -44,6 +46,8 @@ const CategoryTable = ({
   moveFromSubCategoryId,
   moveBudget,
   handleDragEnd,
+  onCategoryRenamed,
+  onSubCategoryRenamed,
 }: CategoryTableProps) => {
   return (
     <DndContext
@@ -68,6 +72,8 @@ const CategoryTable = ({
               }
               onAddSubCategory={handleAddSubCategory}
               onBudgetedClick={handleBudgetedClick}
+              onCategoryRenamed={onCategoryRenamed}
+              onSubCategoryRenamed={onSubCategoryRenamed}
             />
           ))}
           {/* Move Budget Modal */}

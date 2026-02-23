@@ -198,6 +198,30 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
       await refreshSnapshot(activeMonth, activeYear);
     };
 
+    const handleCategoryRenamed = (categoryId: number, newName: string) => {
+      setCategoryList((prev) =>
+        prev.map((cat) =>
+          cat.id === categoryId ? { ...cat, name: newName } : cat,
+        ),
+      );
+    };
+
+    const handleSubCategoryRenamed = (
+      subCategoryId: number,
+      newName: string,
+    ) => {
+      setCategoryList((prev) =>
+        prev.map((cat) => ({
+          ...cat,
+          SubCategory: cat.SubCategory.map((sub: any) =>
+            sub.id === subCategoryId || sub.subCategoryId === subCategoryId
+              ? { ...sub, name: newName }
+              : sub,
+          ),
+        })),
+      );
+    };
+
     return (
       <div className="w-full min-h-full bg-gradient-to-br from-slate-50 via-white to-slate-50 p-8">
         {/* Header Section */}
@@ -238,6 +262,8 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
             moveFromSubCategoryId={moveFromSubCategoryId}
             moveBudget={moveBudget}
             handleDragEnd={handleDragEnd}
+            onCategoryRenamed={handleCategoryRenamed}
+            onSubCategoryRenamed={handleSubCategoryRenamed}
           />
         )}
 

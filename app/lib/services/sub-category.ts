@@ -31,3 +31,17 @@ export async function createSubCategory(categoryId: number, name: string) {
     throw new Error("Failed to create subcategory");
   }
 }
+
+export async function updateSubCategory(id: number, name: string) {
+  try {
+    const res = await axios.patch(`/api/subcategories/${id}`, { name });
+    return res.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        error.response?.data?.error || "Failed to update subcategory",
+      );
+    }
+    throw new Error("Failed to update subcategory");
+  }
+}

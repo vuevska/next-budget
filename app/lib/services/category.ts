@@ -27,3 +27,17 @@ export async function persistCategoryOrder(categories: { id: number }[]) {
     throw new Error("Failed to persist category order");
   }
 }
+
+export async function updateCategory(id: number, name: string) {
+  try {
+    const res = await axios.patch(`/api/categories/${id}`, { name });
+    return res.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        error.response?.data?.error || "Failed to update category",
+      );
+    }
+    throw new Error("Failed to update category");
+  }
+}

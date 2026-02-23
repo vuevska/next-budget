@@ -1,11 +1,14 @@
 "use client";
+import { useState, useRef, useEffect } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { SubCategory, SubCategoryPeriod } from "@prisma/client";
 import { FaGripVertical, FaWallet, FaEllipsisH } from "react-icons/fa";
 import { IoMdAdd } from "react-icons/io";
+import { FiCheck, FiX } from "react-icons/fi";
 import AddSubCategoryForm from "./AddSubCategoryForm";
 import SubCategoryTable from "./SubCategoryTable";
+import { updateCategory } from "@/app/lib/services/category";
 
 export function SortableCategoryItem({
   category,
@@ -13,6 +16,8 @@ export function SortableCategoryItem({
   onToggleAddSubCategory,
   onAddSubCategory,
   onBudgetedClick,
+  onCategoryRenamed,
+  onSubCategoryRenamed,
 }: Readonly<{
   category: any;
   expandedAddSubCategory: number | null;
@@ -24,6 +29,8 @@ export function SortableCategoryItem({
   ) => void;
   onAccountClick?: (id: number) => void;
   onBudgetedClick?: (subCategory: any) => void;
+  onCategoryRenamed?: (categoryId: number, newName: string) => void;
+  onSubCategoryRenamed?: (subCategoryId: number, newName: string) => void;
 }>) {
   const {
     attributes,
@@ -38,6 +45,49 @@ export function SortableCategoryItem({
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
+  };
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState(category.name);
+  const [isSaving, setIsSaving] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditing]);
+
+  const handleSave = async () => {
+    const trimmed = editName.trim();
+    if (!trimmed || trimmed === category.name) {
+      setEditName(category.name);
+      setIsEditing(false);
+      return;
+    }
+    setIsSaving(true);
+    try {
+      await updateCategory(category.id, trimmed);
+      onCategoryRenamed?.(category.id, trimmed);
+      setIsEditing(false);
+    } catch (err) {
+      console.error("Failed to rename category:", err);
+      setEditName(category.name);
+      setIsEditing(false);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setEditName(category.name);
+    setIsEditing(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") handleSave();
+    if (e.key === "Escape") handleCancel();
   };
 
   return (
@@ -62,9 +112,47 @@ export function SortableCategoryItem({
               <FaWallet />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-900">
-                {category.name}
-              </h2>
+              {isEditing ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    onBlur={handleSave}
+                    disabled={isSaving}
+                    className="text-lg font-bold text-slate-900 bg-white border-2 border-indigo-300 rounded-lg px-3 py-1 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all w-48"
+                    maxLength={255}
+                  />
+                  <button
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    className="p-1.5 rounded-lg bg-emerald-100 text-emerald-600 hover:bg-emerald-200 transition-colors"
+                    aria-label="Save"
+                  >
+                    <FiCheck size={16} />
+                  </button>
+                  <button
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={handleCancel}
+                    disabled={isSaving}
+                    className="p-1.5 rounded-lg bg-red-100 text-red-500 hover:bg-red-200 transition-colors"
+                    aria-label="Cancel"
+                  >
+                    <FiX size={16} />
+                  </button>
+                </div>
+              ) : (
+                <h2
+                  className="text-lg font-bold text-slate-900 cursor-pointer hover:text-indigo-600 transition-colors"
+                  onDoubleClick={() => setIsEditing(true)}
+                  title="Double-click to edit"
+                >
+                  {category.name}
+                </h2>
+              )}
             </div>
           </div>
           <button
@@ -101,6 +189,7 @@ export function SortableCategoryItem({
           <SubCategoryTable
             subCategories={category.SubCategory}
             onBudgetedClick={onBudgetedClick}
+            onSubCategoryRenamed={onSubCategoryRenamed}
           />
         )}
       </div>
