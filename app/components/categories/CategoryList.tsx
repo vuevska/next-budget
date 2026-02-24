@@ -228,7 +228,8 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
         <CategoryHeader
           amount={toBudgetAmount}
           setShowBudgetModal={() => setShowBudgetModal(true)}
-          setShowAddCategory={() => setShowAddCategory(!showAddCategory)}
+          showAddCategory={showAddCategory}
+          setShowAddCategory={() => setShowAddCategory(true)}
           month={activeMonth}
           year={activeYear}
           onPrevMonth={handlePrevMonth}
@@ -237,7 +238,7 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
 
         {/* Add Category Form */}
         {showAddCategory && (
-          <div className="mb-6 bg-white rounded-2xl border-2 border-indigo-100 p-6 shadow-sm">
+          <div className="mb-4 bg-white rounded-xl border border-slate-200 px-3 sm:px-4 py-2.5 shadow-sm">
             <AddCategoryForm
               onAddCategory={handleAddCategory}
               onCancel={() => setShowAddCategory(false)}

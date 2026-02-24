@@ -1,15 +1,14 @@
 "use client";
 
 import { SubCategory, SubCategoryPeriod } from "@prisma/client";
-import { IoMdClose } from "react-icons/io";
 import { createSubCategorySchema } from "@/app/lib/validationSchema";
 import z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Label } from "@radix-ui/themes/components/context-menu";
-import ErrorMessage from "../ErrorMessage";
-import { Button } from "@radix-ui/themes";
 import { createSubCategory } from "@/app/lib/services/sub-category";
+import { FiCheck, FiX } from "react-icons/fi";
+import { Button } from "@radix-ui/themes";
+import ErrorMessage from "../ErrorMessage";
 
 type SubCategoryFormValues = z.infer<typeof createSubCategorySchema>;
 
@@ -47,42 +46,38 @@ export default function AddSubCategoryForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
-      <div className="grid gap-2">
-        <div>
-          <Label className="block text-xs font-semibold text-gray-700 mb-1">
-            Sub-Category Name
-          </Label>
-          <ErrorMessage>{errors.name?.message}</ErrorMessage>
-          <input
-            type="text"
-            {...register("name")}
-            placeholder="e.g., Vegetables, Internet"
-            className="w-full px-2 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition text-xs"
-            disabled={isSubmitting}
-            autoFocus
-          />
-        </div>
-      </div>
-
-      <div className="flex gap-2 justify-end">
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition duration-150 font-medium text-xs disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isSubmitting ? "Adding..." : "Add Sub-Category"}
-        </Button>
-        <Button
-          type="button"
-          onClick={onCancel}
-          className="flex items-center gap-1 px-2 py-1.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition duration-150 font-medium text-xs"
-          disabled={isSubmitting}
-        >
-          <IoMdClose size={12} />
-          Cancel
-        </Button>
-      </div>
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="flex items-center gap-2"
+    >
+      <div className="w-1.5 h-1.5 rounded-full bg-indigo-300 shrink-0" />
+      <input
+        type="text"
+        {...register("name")}
+        placeholder="New subcategory name…"
+        className="flex-1 min-w-0 px-2.5 py-1 text-sm font-medium text-slate-900 bg-white border border-slate-200 rounded-md focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200 transition-all placeholder:text-slate-400"
+        disabled={isSubmitting}
+        autoFocus
+      />
+      <Button
+        type="submit"
+        disabled={isSubmitting}
+        className="p-1.5 rounded-md text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+        aria-label="Add subcategory"
+        title="Add"
+      >
+        <FiCheck size={15} />
+      </Button>
+      <Button
+        onClick={onCancel}
+        className="p-1.5 rounded-md text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all"
+        disabled={isSubmitting}
+        aria-label="Cancel"
+        title="Cancel"
+      >
+        <FiX size={15} />
+      </Button>
+      <ErrorMessage>{errors.name?.message}</ErrorMessage>
     </form>
   );
 }

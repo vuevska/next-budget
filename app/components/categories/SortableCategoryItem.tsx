@@ -148,10 +148,15 @@ export function SortableCategoryItem({
             )}
           </div>
           <button
-            onClick={() => onToggleAddSubCategory(category.id)}
+            onClick={() => {
+              if (expandedAddSubCategory !== category.id) {
+                onToggleAddSubCategory(category.id);
+              }
+            }}
+            disabled={expandedAddSubCategory === category.id}
             className={`p-1 rounded transition-colors shrink-0 ${
               expandedAddSubCategory === category.id
-                ? "text-indigo-600"
+                ? "text-indigo-400 opacity-50 cursor-not-allowed"
                 : "text-slate-300 hover:text-slate-500"
             }`}
             aria-label="Add subcategory"
@@ -162,7 +167,7 @@ export function SortableCategoryItem({
 
         {/* Add SubCategory Form */}
         {expandedAddSubCategory === category.id && (
-          <div className="px-3 sm:px-4 py-3 bg-slate-50/50 border-t border-slate-100">
+          <div className="px-3 sm:px-5 py-2 bg-white border-t border-slate-100">
             <AddSubCategoryForm
               categoryId={category.id}
               onAddSubCategory={onAddSubCategory}

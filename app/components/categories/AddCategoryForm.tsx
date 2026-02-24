@@ -1,13 +1,12 @@
 import { createCategory } from "@/app/lib/services/category";
-import { IoMdClose } from "react-icons/io";
 import z from "zod";
 import { createCategorySchema } from "@/app/lib/validationSchema";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Label } from "@radix-ui/themes/components/context-menu";
-import { Button } from "@radix-ui/themes";
 import ErrorMessage from "../ErrorMessage";
 import { CategoryBudgetView } from "./CategoryList";
+import { FiCheck, FiX } from "react-icons/fi";
+import { Button } from "@radix-ui/themes";
 
 type CategoryFormValues = z.infer<typeof createCategorySchema>;
 
@@ -44,40 +43,37 @@ export default function AddCategoryForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
-      <div>
-        <Label className="block text-xs font-semibold text-gray-700 mb-1">
-          Category Name
-        </Label>
-        <ErrorMessage>{errors.name?.message}</ErrorMessage>
-        <input
-          type="text"
-          {...register("name")}
-          placeholder="e.g., Groceries, Utilities, Entertainment"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition text-sm"
-          disabled={isSubmitting}
-          autoFocus
-        />
-      </div>
-
-      <div className="flex gap-2 justify-end">
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="px-4 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition duration-150 font-medium text-xs disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isSubmitting ? "Creating..." : "Create Category"}
-        </Button>
-        <Button
-          type="button"
-          onClick={onCancel}
-          className="flex items-center gap-1 px-3 py-1.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition duration-150 font-medium text-xs"
-          disabled={isSubmitting}
-        >
-          <IoMdClose size={14} />
-          Cancel
-        </Button>
-      </div>
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="flex items-center gap-2"
+    >
+      <input
+        type="text"
+        {...register("name")}
+        placeholder="New category name…"
+        className="flex-1 min-w-0 px-2.5 py-1 text-sm font-medium text-slate-900 bg-white border border-slate-200 rounded-md focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200 transition-all placeholder:text-slate-400"
+        disabled={isSubmitting}
+        autoFocus
+      />
+      <Button
+        type="submit"
+        disabled={isSubmitting}
+        className="p-1.5 rounded-md text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+        aria-label="Create category"
+        title="Create"
+      >
+        <FiCheck size={15} />
+      </Button>
+      <Button
+        onClick={onCancel}
+        className="p-1.5 rounded-md text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all"
+        disabled={isSubmitting}
+        aria-label="Cancel"
+        title="Cancel"
+      >
+        <FiX size={15} />
+      </Button>
+      <ErrorMessage>{errors.name?.message}</ErrorMessage>
     </form>
   );
 }

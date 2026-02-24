@@ -5,6 +5,7 @@ import { IoMdAdd } from "react-icons/io";
 type CategoryHeaderProps = Readonly<{
   amount: number;
   setShowBudgetModal: () => void;
+  showAddCategory: boolean;
   setShowAddCategory: () => void;
   month: number;
   year: number;
@@ -30,6 +31,7 @@ const monthNames = [
 const CategoryHeader = ({
   amount,
   setShowBudgetModal,
+  showAddCategory,
   setShowAddCategory,
   month,
   year,
@@ -81,11 +83,16 @@ const CategoryHeader = ({
 
       <Button
         onClick={setShowAddCategory}
-        className="flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl font-medium text-sm group w-full sm:w-auto flex-shrink-0"
+        disabled={showAddCategory}
+        className={`flex items-center justify-center gap-2 px-5 py-3 text-white rounded-xl transition-all duration-200 shadow-lg font-medium text-sm group w-full sm:w-auto flex-shrink-0 ${
+          showAddCategory
+            ? "bg-indigo-400 cursor-not-allowed opacity-60 shadow-none"
+            : "bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 hover:shadow-xl"
+        }`}
       >
         <IoMdAdd
           size={18}
-          className="group-hover:rotate-90 transition-transform"
+          className={showAddCategory ? "" : "group-hover:rotate-90 transition-transform"}
         />
         New Category
       </Button>
