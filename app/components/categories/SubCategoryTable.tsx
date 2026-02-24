@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { formatMKD } from "@/app/lib/formatMKD";
 import { SubCategory } from "@prisma/client";
-import { FiCheck, FiX } from "react-icons/fi";
+import { FiCheck, FiX, FiEdit2 } from "react-icons/fi";
 import { updateSubCategory } from "@/app/lib/services/sub-category";
 
 type SubCategoryTableProps = Readonly<{
@@ -104,15 +104,18 @@ function EditableSubCategoryName({
   }
 
   return (
-    <div className="flex items-center gap-2 truncate">
+    <div className="flex items-center gap-2 truncate group/edit">
       <div className="w-1.5 h-1.5 rounded-full bg-indigo-300 shrink-0" />
-      <span
-        className="font-medium text-slate-700 truncate cursor-pointer hover:text-indigo-600 transition-colors text-sm"
-        onDoubleClick={() => setIsEditing(true)}
-        title="Double-click to edit"
-      >
+      <span className="font-medium text-slate-700 truncate text-sm">
         {subCategory.name}
       </span>
+      <button
+        onClick={() => setIsEditing(true)}
+        className="p-0.5 rounded text-slate-300 hover:text-indigo-500 opacity-0 group-hover/edit:opacity-100 transition-all shrink-0"
+        aria-label="Edit subcategory name"
+      >
+        <FiEdit2 size={11} />
+      </button>
     </div>
   );
 }

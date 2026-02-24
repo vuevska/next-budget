@@ -5,7 +5,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { SubCategory, SubCategoryPeriod } from "@prisma/client";
 import { FaGripVertical } from "react-icons/fa";
 import { IoMdAdd } from "react-icons/io";
-import { FiCheck, FiX } from "react-icons/fi";
+import { FiCheck, FiX, FiEdit2 } from "react-icons/fi";
 import AddSubCategoryForm from "./AddSubCategoryForm";
 import SubCategoryTable from "./SubCategoryTable";
 import { updateCategory } from "@/app/lib/services/category";
@@ -94,7 +94,7 @@ export function SortableCategoryItem({
     <div ref={setNodeRef} style={style}>
       <div className={`border-b border-slate-200 last:border-b-0 ${isDragging ? "ring-2 ring-indigo-300" : ""}`}>
         {/* Category Header — compact row */}
-        <div className="flex items-center justify-between px-3 sm:px-4 py-2 bg-slate-50">
+        <div className="flex items-center px-3 sm:px-4 py-2 bg-slate-50" style={{ display: 'grid', gridTemplateColumns: '40% 20% 20% 20%', alignItems: 'center' }}>
           <div className="flex items-center gap-2 min-w-0">
             <button
               {...attributes}
@@ -138,31 +138,40 @@ export function SortableCategoryItem({
                 </button>
               </div>
             ) : (
-              <span
-                className="text-sm font-semibold text-slate-700 cursor-pointer hover:text-indigo-600 transition-colors truncate"
-                onDoubleClick={() => setIsEditing(true)}
-                title="Double-click to edit"
-              >
-                {category.name}
-              </span>
+              <div className="flex items-center gap-1.5 group/edit min-w-0">
+                <span className="text-sm font-semibold text-slate-700 truncate">
+                  {category.name}
+                </span>
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="p-0.5 rounded text-slate-300 hover:text-indigo-500 opacity-0 group-hover/edit:opacity-100 transition-all shrink-0"
+                  aria-label="Edit category name"
+                >
+                  <FiEdit2 size={12} />
+                </button>
+              </div>
             )}
+
+            <button
+              onClick={() => {
+                if (expandedAddSubCategory !== category.id) {
+                  onToggleAddSubCategory(category.id);
+                }
+              }}
+              disabled={expandedAddSubCategory === category.id}
+              className={`p-1 rounded transition-colors shrink-0 ${
+                expandedAddSubCategory === category.id
+                  ? "text-indigo-400 opacity-50 cursor-not-allowed"
+                  : "text-slate-300 hover:text-slate-500"
+              }`}
+              aria-label="Add subcategory"
+            >
+              <IoMdAdd size={16} />
+            </button>
           </div>
-          <button
-            onClick={() => {
-              if (expandedAddSubCategory !== category.id) {
-                onToggleAddSubCategory(category.id);
-              }
-            }}
-            disabled={expandedAddSubCategory === category.id}
-            className={`p-1 rounded transition-colors shrink-0 ${
-              expandedAddSubCategory === category.id
-                ? "text-indigo-400 opacity-50 cursor-not-allowed"
-                : "text-slate-300 hover:text-slate-500"
-            }`}
-            aria-label="Add subcategory"
-          >
-            <IoMdAdd size={16} />
-          </button>
+          <span className="text-right text-xs font-semibold text-slate-400 uppercase tracking-wider px-2 sm:px-4">Budgeted</span>
+          <span className="text-right text-xs font-semibold text-slate-400 uppercase tracking-wider px-2 sm:px-4">Spent</span>
+          <span className="text-right text-xs font-semibold text-slate-400 uppercase tracking-wider px-2 sm:px-4">Available</span>
         </div>
 
         {/* Add SubCategory Form */}

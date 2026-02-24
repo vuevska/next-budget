@@ -69,14 +69,14 @@ const CategoryHeader = ({
         {amount > 0 && (
           <Button
             onClick={setShowBudgetModal}
-            className="bg-white rounded-xl border-2 border-green-200 p-4 shadow-sm hover:shadow-md hover:border-green-300 transition-all duration-200 cursor-pointer group w-full sm:w-auto"
+            className="inline-flex items-center gap-3 px-5 py-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 hover:border-emerald-300 transition-all duration-200 cursor-pointer group"
           >
-            <p className="text-xs font-normal text-slate-500 uppercase tracking-wide mb-1 group-hover:text-green-600 transition-colors">
+            <span className="text-sm font-semibold text-emerald-600 uppercase tracking-wide">
               To be Budgeted
-            </p>
-            <p className="text-xl font-bold text-green-600 group-hover:scale-105 transition-transform origin-left">
+            </span>
+            <span className="text-lg font-bold text-emerald-700">
               <FormattedAmount amount={amount} />
-            </p>
+            </span>
           </Button>
         )}
       </div>
