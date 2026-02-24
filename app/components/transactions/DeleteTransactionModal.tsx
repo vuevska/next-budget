@@ -18,7 +18,7 @@ const DeleteTransactionModal = ({
     <Portal>
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
         <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full mx-4 border border-slate-200">
-          <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-gradient-to-r from-red-50 to-red-50">
+          <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-gradient-to-r from-red-50 to-red-50 rounded-t-xl">
             <h2 className="text-lg font-bold text-slate-900">
               {isTransfer ? "Delete Transfer" : "Delete Transaction"}
             </h2>
@@ -41,14 +41,14 @@ const DeleteTransactionModal = ({
               <Button
                 type="button"
                 onClick={onConfirm}
-                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+                className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
               >
                 Delete
               </Button>
               <Button
                 type="button"
                 onClick={onCancel}
-                className="flex-1 px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-900 rounded-lg font-medium transition-colors"
+                className="flex-1 px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-900 rounded-lg font-medium transition-colors"
               >
                 Cancel
               </Button>

@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { IoMdClose } from "react-icons/io";
+import { FiX } from "react-icons/fi";
 import Portal from "../Portal";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -47,12 +47,10 @@ export default function MoveBudgetModal({
   });
 
   const fromSubCategoryId = watch("fromSubCategoryId");
-
   const allSubCategories = categories.flatMap((cat) => cat.SubCategory);
   const fromSubCategory = allSubCategories.find(
     (s) => s.id === fromSubCategoryId,
   );
-
   const maxAmount = fromSubCategory ? (fromSubCategory.periodBudgeted ?? 0) : 0;
 
   const onSubmit = (data: MoveBudgetInput) => {
@@ -74,33 +72,27 @@ export default function MoveBudgetModal({
 
   return (
     <Portal>
-      <div
-        className="fixed inset-0 bg-black/50 z-40"
-        onClick={onClose}
-        aria-hidden="true"
-      />
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-          <div className="sticky top-0 bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-5 flex items-center justify-between border-b border-indigo-200">
-            <h2 className="text-xl font-bold text-white">
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 border border-slate-200">
+          <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-t-xl">
+            <h2 className="text-xl font-bold text-slate-900">
               Move Budgeted Amount
             </h2>
-            <button
+            <Button
               onClick={onClose}
-              className="p-1 hover:bg-indigo-500 rounded-lg transition-colors"
-              aria-label="Close modal"
+              className="p-1 hover:bg-slate-200 rounded-lg transition-colors"
             >
-              <IoMdClose size={24} className="text-white" />
-            </button>
+              <FiX size={24} className="text-slate-600" />
+            </Button>
           </div>
-          <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
             <div>
-              <Label className="block text-sm font-semibold text-slate-700 mb-2">
+              <Label className="block text-sm font-medium text-slate-700 mb-2">
                 From
               </Label>
               <select
                 {...register("fromSubCategoryId", { valueAsNumber: true })}
-                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
                 defaultValue={defaultFromSubCategoryId}
                 disabled={isSubmitting}
               >
@@ -114,12 +106,12 @@ export default function MoveBudgetModal({
               <ErrorMessage>{errors.fromSubCategoryId?.message}</ErrorMessage>
             </div>
             <div>
-              <Label className="block text-sm font-semibold text-slate-700 mb-2">
+              <Label className="block text-sm font-medium text-slate-700 mb-2">
                 To
               </Label>
               <select
                 {...register("toSubCategoryId", { valueAsNumber: true })}
-                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
                 disabled={isSubmitting}
               >
                 <option value="">Select a subcategory</option>
@@ -133,7 +125,7 @@ export default function MoveBudgetModal({
               <ErrorMessage>{errors.toSubCategoryId?.message}</ErrorMessage>
             </div>
             <div>
-              <Label className="block text-sm font-semibold text-slate-700 mb-2">
+              <Label className="block text-sm font-medium text-slate-700 mb-2">
                 Amount
               </Label>
               <input
@@ -142,7 +134,7 @@ export default function MoveBudgetModal({
                 min={1}
                 max={maxAmount}
                 step="0.01"
-                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-lg"
+                className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
                 disabled={isSubmitting}
               />
               <ErrorMessage>{errors.amount?.message}</ErrorMessage>
@@ -159,17 +151,19 @@ export default function MoveBudgetModal({
             )}
             <div className="flex gap-3 pt-4">
               <Button
-                onClick={onClose}
+                type="submit"
                 disabled={isSubmitting}
-                className="flex-1 px-4 py-3 border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Cancel
-              </Button>
-              <Button
-                disabled={isSubmitting}
-                className="flex-1 px-4 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 disabled:from-slate-300 disabled:to-slate-400 text-white font-medium rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
               >
                 {isSubmitting ? "Moving..." : "Move"}
+              </Button>
+              <Button
+                type="button"
+                onClick={onClose}
+                disabled={isSubmitting}
+                className="flex-1 px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-900 rounded-lg font-medium transition-colors disabled:opacity-50"
+              >
+                Cancel
               </Button>
             </div>
           </form>

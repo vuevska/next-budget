@@ -124,7 +124,7 @@ export default function EditTransactionModal({
     <Portal>
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
         <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 border border-slate-200">
-          <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-gradient-to-r from-indigo-50 to-blue-50">
+          <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-t-xl">
             <h2 className="text-xl font-bold text-slate-900">
               {isTransfer ? "Edit Transfer" : "Edit Transaction"}
             </h2>
@@ -164,7 +164,7 @@ export default function EditTransactionModal({
                 placeholder="0.00 мкд"
                 {...register("amount", { valueAsNumber: true })}
                 step="0.01"
-                className="w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
               />
             </div>
 
@@ -193,7 +193,7 @@ export default function EditTransactionModal({
                 type="text"
                 {...register("description")}
                 placeholder="e.g., Morning coffee"
-                className="w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
               />
             </div>
 
@@ -205,7 +205,7 @@ export default function EditTransactionModal({
               <input
                 type="date"
                 {...register("date", { valueAsDate: true })}
-                className="w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
               />
             </div>
 
@@ -213,7 +213,7 @@ export default function EditTransactionModal({
             <select
               {...register("subCatId", { valueAsNumber: true })}
               disabled={isInflow || isTransfer}
-              className={`w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors ${
+              className={`w-full px-4 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors ${
                 isTransfer ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
@@ -229,7 +229,7 @@ export default function EditTransactionModal({
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
               >
                 {isSubmitting ? "Saving..." : "Save"}
               </Button>
@@ -237,7 +237,7 @@ export default function EditTransactionModal({
                 type="button"
                 onClick={onClose}
                 disabled={isSubmitting}
-                className="flex-1 px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-900 rounded-lg font-medium transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-900 rounded-lg font-medium transition-colors disabled:opacity-50"
               >
                 Cancel
               </Button>

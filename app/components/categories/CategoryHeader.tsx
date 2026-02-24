@@ -60,7 +60,7 @@ const CategoryHeader = ({
             ▶
           </Button>
         </div>
-        <p className="text-slate-600 text-sm mt-1">
+        <p className="text-slate-600 text-center text-sm mt-1">
           Manage your spending categories
         </p>
       </div>
