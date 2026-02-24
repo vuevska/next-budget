@@ -14,7 +14,7 @@ import { createTransaction } from "@/app/lib/services/transactions";
 import { useEffect, useState } from "react";
 import { getCategories } from "@/app/lib/data/category";
 import PayeeCombobox from "./PayeeCombobox";
-import { createPayee } from "@/app/lib/services/payees";
+import { createPayee, getTransferPayees } from "@/app/lib/services/payees";
 
 export type CreateTransactionInput = z.infer<typeof createTransactionSchema> & {
   accountId: number;
@@ -58,18 +58,44 @@ export default function AddTransactionModal({
   });
 
   const [isInflow, setIsInflow] = useState(false);
+  const [isTransfer, setIsTransfer] = useState(false);
   const [selectedPayeeId, setSelectedPayeeId] = useState<number | null>(null);
+  const [transferPayees, setTransferPayees] = useState<Payee[]>([]);
 
   useEffect(() => {
-    if (isInflow) {
+    const fetchTransferPayees = async () => {
+      try {
+        const data = await getTransferPayees(accountId);
+        setTransferPayees(data);
+      } catch (err) {
+        console.error("Failed to load transfer payees", err);
+      }
+    };
+    fetchTransferPayees();
+  }, [accountId]);
+
+  useEffect(() => {
+    if (isInflow || isTransfer) {
       setValue("subCatId", null);
     }
-  }, [isInflow, setValue]);
+  }, [isInflow, isTransfer, setValue]);
 
-  const handlePayeeChange = (payeeId: number | null) => {
+  const handlePayeeChange = (payeeId: number | null, isPayeeTransfer?: boolean) => {
     setSelectedPayeeId(payeeId);
+    const transferSelected = !!isPayeeTransfer;
+    setIsTransfer(transferSelected);
+
     if (payeeId !== null) {
       setValue("payeeId", payeeId, { shouldValidate: true });
+    }
+
+    if (transferSelected) {
+      setIsInflow(false);
+      setValue("isInflow", false);
+      setValue("subCatId", null);
+      setValue("isTransfer", true);
+    } else {
+      setValue("isTransfer", false);
     }
   };
 
@@ -97,6 +123,7 @@ export default function AddTransactionModal({
 
       reset();
       setSelectedPayeeId(null);
+      setIsTransfer(false);
       onClose();
     } catch (err: any) {
       setError("root", {
@@ -113,7 +140,7 @@ export default function AddTransactionModal({
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-gradient-to-r from-indigo-50 to-blue-50">
             <h2 className="text-xl font-bold text-slate-900">
-              New Transaction
+              {isTransfer ? "New Transfer" : "New Transaction"}
             </h2>
             <Button
               onClick={onClose}
@@ -138,9 +165,10 @@ export default function AddTransactionModal({
                     type="checkbox"
                     {...register("isInflow")}
                     onChange={(e) => setIsInflow(e.target.checked)}
-                    className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                    disabled={isTransfer}
+                    className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50"
                   />
-                  <span className="text-sm font-medium text-slate-700">
+                  <span className={`text-sm font-medium ${isTransfer ? "text-slate-400" : "text-slate-700"}`}>
                     Inflow
                   </span>
                 </Label>
@@ -164,6 +192,7 @@ export default function AddTransactionModal({
               <ErrorMessage>{errors.payeeId?.message}</ErrorMessage>
               <PayeeCombobox
                 payees={payees}
+                transferPayees={transferPayees}
                 value={selectedPayeeId}
                 onChange={handlePayeeChange}
                 onCreatePayee={handleCreatePayee}
@@ -199,8 +228,10 @@ export default function AddTransactionModal({
             {/* SubCategory */}
             <select
               {...register("subCatId", { valueAsNumber: true })}
-              disabled={isInflow}
-              className="w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+              disabled={isInflow || isTransfer}
+              className={`w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors ${
+                isTransfer ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
               <option value="">Select a category...</option>
               {subCategories.map((sub) => (

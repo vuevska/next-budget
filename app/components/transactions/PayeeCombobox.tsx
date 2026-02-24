@@ -6,18 +6,22 @@ import { Payee } from "@prisma/client";
 
 interface PayeeComboboxProps {
   payees: Payee[];
+  transferPayees?: Payee[];
   value: number | null;
-  onChange: (payeeId: number | null) => void;
+  onChange: (payeeId: number | null, isTransfer?: boolean) => void;
   onCreatePayee: (name: string) => Promise<Payee>;
   error?: string;
+  disabled?: boolean;
 }
 
 export default function PayeeCombobox({
   payees,
+  transferPayees = [],
   value,
   onChange,
   onCreatePayee,
   error,
+  disabled = false,
 }: PayeeComboboxProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -25,13 +29,18 @@ export default function PayeeCombobox({
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const selectedPayee = payees.find((p) => p.id === value);
+  const allPayees = [...transferPayees, ...payees];
+  const selectedPayee = allPayees.find((p) => p.id === value);
 
   const filteredPayees = payees.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase()),
   );
 
-  const exactMatch = payees.some(
+  const filteredTransferPayees = transferPayees.filter((p) =>
+    p.name.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const exactMatch = allPayees.some(
     (p) => p.name.toLowerCase() === search.trim().toLowerCase(),
   );
 
@@ -66,9 +75,9 @@ export default function PayeeCombobox({
     }
   }, [value, selectedPayee]);
 
-  const handleSelect = (payee: Payee) => {
+  const handleSelect = (payee: Payee, isTransfer: boolean = false) => {
     setSearch(payee.name);
-    onChange(payee.id);
+    onChange(payee.id, isTransfer);
     setIsOpen(false);
   };
 
@@ -79,7 +88,7 @@ export default function PayeeCombobox({
     setIsCreating(true);
     try {
       const newPayee = await onCreatePayee(name);
-      handleSelect(newPayee);
+      handleSelect(newPayee, false);
     } catch (err) {
       console.error("Failed to create payee:", err);
     } finally {
@@ -99,10 +108,12 @@ export default function PayeeCombobox({
   };
 
   const handleInputFocus = () => {
-    setIsOpen(true);
-    // Select all text on focus to make it easy to replace
-    if (inputRef.current) {
-      inputRef.current.select();
+    if (!disabled) {
+      setIsOpen(true);
+      // Select all text on focus to make it easy to replace
+      if (inputRef.current) {
+        inputRef.current.select();
+      }
     }
   };
 
@@ -120,16 +131,20 @@ export default function PayeeCombobox({
           onChange={handleInputChange}
           onFocus={handleInputFocus}
           placeholder="Search or type a payee..."
+          disabled={disabled}
           className={`w-full pl-9 pr-9 py-2 bg-white border rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 transition-colors ${
-            error
-              ? "border-red-400 focus:border-red-500 focus:ring-red-500"
-              : "border-slate-300 focus:border-indigo-500 focus:ring-indigo-500"
+            disabled
+              ? "bg-slate-100 text-slate-500 cursor-not-allowed"
+              : error
+                ? "border-red-400 focus:border-red-500 focus:ring-red-500"
+                : "border-slate-300 focus:border-indigo-500 focus:ring-indigo-500"
           }`}
         />
         <button
           type="button"
-          onClick={() => setIsOpen(!isOpen)}
-          className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 transition-colors"
+          onClick={() => !disabled && setIsOpen(!isOpen)}
+          disabled={disabled}
+          className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 transition-colors disabled:cursor-not-allowed"
         >
           <FiChevronDown
             size={16}
@@ -138,26 +153,60 @@ export default function PayeeCombobox({
         </button>
       </div>
 
-      {isOpen && (
+      {isOpen && !disabled && (
         <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+          {/* Transfer payees section */}
+          {filteredTransferPayees.length > 0 && (
+            <>
+              <div className="px-4 py-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 uppercase tracking-wider">
+                Transfer
+              </div>
+              <ul>
+                {filteredTransferPayees.map((payee) => (
+                  <li key={payee.id}>
+                    <button
+                      type="button"
+                      onClick={() => handleSelect(payee, true)}
+                      className={`w-full text-left px-4 py-2 text-sm transition-colors ${
+                        payee.id === value
+                          ? "bg-indigo-50 text-indigo-700 font-medium"
+                          : "text-slate-700 hover:bg-slate-50"
+                      }`}
+                    >
+                      {payee.name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+
+          {/* Regular payees section */}
           {filteredPayees.length > 0 && (
-            <ul>
-              {filteredPayees.map((payee) => (
-                <li key={payee.id}>
-                  <button
-                    type="button"
-                    onClick={() => handleSelect(payee)}
-                    className={`w-full text-left px-4 py-2 text-sm transition-colors ${
-                      payee.id === value
-                        ? "bg-indigo-50 text-indigo-700 font-medium"
-                        : "text-slate-700 hover:bg-slate-50"
-                    }`}
-                  >
-                    {payee.name}
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <>
+              {filteredTransferPayees.length > 0 && (
+                <div className="px-4 py-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 uppercase tracking-wider">
+                  Payees
+                </div>
+              )}
+              <ul>
+                {filteredPayees.map((payee) => (
+                  <li key={payee.id}>
+                    <button
+                      type="button"
+                      onClick={() => handleSelect(payee, false)}
+                      className={`w-full text-left px-4 py-2 text-sm transition-colors ${
+                        payee.id === value
+                          ? "bg-indigo-50 text-indigo-700 font-medium"
+                          : "text-slate-700 hover:bg-slate-50"
+                      }`}
+                    >
+                      {payee.name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
 
           {showCreateOption && (
@@ -172,7 +221,7 @@ export default function PayeeCombobox({
             </button>
           )}
 
-          {filteredPayees.length === 0 && !showCreateOption && (
+          {filteredPayees.length === 0 && filteredTransferPayees.length === 0 && !showCreateOption && (
             <div className="px-4 py-3 text-sm text-slate-400 text-center">
               No payees found
             </div>

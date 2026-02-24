@@ -122,6 +122,10 @@ model Transaction {
   subCategory   SubCategory? @relation(fields: [subCatId], references: [id])
   accountTypeId Int
   accountType   AccountType  @relation(fields: [accountTypeId], references: [id])
+
+  linkedTransactionId Int?         @unique
+  linkedTransaction   Transaction? @relation("TransferLink", fields: [linkedTransactionId], references: [id])
+  linkedFrom          Transaction? @relation("TransferLink")
 }
 
 model Period {

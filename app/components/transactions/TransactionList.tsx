@@ -25,6 +25,7 @@ type TransactionListViewProps = Readonly<{
 type TransactionWithRelations = Transaction & {
   subCategory: SubCategory | null;
   payee: Payee;
+  linkedTransactionId?: number | null;
 };
 
 export default function TransactionList({
@@ -128,6 +129,12 @@ export default function TransactionList({
     }
   };
 
+  // Check if the transaction being deleted is a transfer
+  const deletingTransaction = deleteConfirmationId
+    ? transactions.find((t) => t.id === deleteConfirmationId)
+    : null;
+  const isDeletingTransfer = !!(deletingTransaction as any)?.linkedTransactionId;
+
   const renderTransactionContent = () => {
     if (loading) {
       return <LoadingTransactions />;
@@ -186,6 +193,7 @@ export default function TransactionList({
         <DeleteTransactionModal
           onCancel={() => setDeleteConfirmationId(null)}
           onConfirm={confirmDeleteTransaction}
+          isTransfer={isDeletingTransfer}
         />
       )}
     </div>

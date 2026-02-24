@@ -108,6 +108,41 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    await tx.payee.upsert({
+      where: {
+        name_userId: {
+          name: `Transfer to/from: ${body.name}`,
+          userId: user.id,
+        },
+      },
+      update: {},
+      create: {
+        name: `Transfer to/from: ${body.name}`,
+        userId: user.id,
+        isSystem: true,
+      },
+    });
+
+    const otherAccounts = await tx.accountType.findMany({
+      where: { userId: user.id, id: { not: account.id } },
+    });
+    for (const otherAccount of otherAccounts) {
+      await tx.payee.upsert({
+        where: {
+          name_userId: {
+            name: `Transfer to/from: ${otherAccount.name}`,
+            userId: user.id,
+          },
+        },
+        update: {},
+        create: {
+          name: `Transfer to/from: ${otherAccount.name}`,
+          userId: user.id,
+          isSystem: true,
+        },
+      });
+    }
+
     return account;
   });
 

@@ -28,8 +28,9 @@ export const createTransactionSchema = z
     }),
     subCatId: z.number().nullable(),
     isInflow: z.boolean(),
+    isTransfer: z.boolean().optional(),
   })
-  .refine((data) => data.isInflow || data.subCatId !== null, {
+  .refine((data) => data.isTransfer || data.isInflow || data.subCatId !== null, {
     message: "Subcategory is required for outflows",
     path: ["subCatId"],
   });

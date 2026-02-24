@@ -74,6 +74,56 @@ export async function DELETE(
     return createErrorResponse("Unauthorized access to account", 403);
   }
 
+  const linkedTxId = (transaction as any).linkedTransactionId;
+  const linkedFromTx = await prisma.transaction.findFirst({
+    where: { linkedTransactionId: transactionId },
+    include: { accountType: true },
+  });
+
+  const linkedTransaction = linkedTxId
+    ? await prisma.transaction.findUnique({
+        where: { id: linkedTxId },
+        include: { accountType: true },
+      })
+    : linkedFromTx;
+
+  const isTransfer = !!linkedTransaction;
+
+  if (isTransfer && linkedTransaction) {
+    await prisma.$transaction(async (tx) => {
+      await tx.transaction.update({
+        where: { id: transactionId },
+        data: { linkedTransactionId: null },
+      });
+      await tx.transaction.update({
+        where: { id: linkedTransaction.id },
+        data: { linkedTransactionId: null },
+      });
+
+      await tx.transaction.delete({ where: { id: transactionId } });
+      await tx.transaction.delete({ where: { id: linkedTransaction.id } });
+
+      const sourceRestore = transaction.isInflow
+        ? account.amount - transaction.amount
+        : account.amount + transaction.amount;
+      await tx.accountType.update({
+        where: { id: account.id },
+        data: { amount: sourceRestore },
+      });
+
+      const linkedAccount = linkedTransaction.accountType;
+      const linkedRestore = linkedTransaction.isInflow
+        ? linkedAccount.amount - linkedTransaction.amount
+        : linkedAccount.amount + linkedTransaction.amount;
+      await tx.accountType.update({
+        where: { id: linkedAccount.id },
+        data: { amount: linkedRestore },
+      });
+    });
+
+    return createSuccessResponse(200);
+  }
+
   await prisma.transaction.delete({
     where: { id: transactionId },
   });
@@ -188,13 +238,85 @@ export async function PUT(
     return createErrorResponse("Unauthorized access to account", 403);
   }
 
-  // Verify the payee belongs to this user
   const payee = await prisma.payee.findUnique({
     where: { id: newPayeeId },
   });
 
   if (!payee || payee.userId !== user.id) {
     return createErrorResponse("Invalid payee", 400);
+  }
+
+  const oldLinkedTxId = (oldTransaction as any).linkedTransactionId;
+  const oldLinkedFromTx = await prisma.transaction.findFirst({
+    where: { linkedTransactionId: transactionId } as any,
+    include: { accountType: true },
+  });
+  const linkedTransaction = oldLinkedTxId
+    ? await prisma.transaction.findUnique({
+        where: { id: oldLinkedTxId },
+        include: { accountType: true },
+      })
+    : oldLinkedFromTx;
+
+  const isTransfer = !!linkedTransaction;
+
+  if (isTransfer && linkedTransaction) {
+    const newTxDate = new Date(newDate);
+
+    const result = await prisma.$transaction(async (tx) => {
+      const updatedSourceTx = await tx.transaction.update({
+        where: { id: transactionId },
+        data: {
+          amount: newAmount,
+          description,
+          date: newTxDate,
+        },
+        include: {
+          subCategory: true,
+          payee: true,
+        },
+      });
+
+      await tx.transaction.update({
+        where: { id: linkedTransaction.id },
+        data: {
+          amount: newAmount,
+          description,
+          date: newTxDate,
+        },
+      });
+
+      let sourceBalance = account.amount;
+      if (oldTransaction.isInflow) {
+        sourceBalance -= oldTransaction.amount;
+        sourceBalance += newAmount;
+      } else {
+        sourceBalance += oldTransaction.amount;
+        sourceBalance -= newAmount;
+      }
+      await tx.accountType.update({
+        where: { id: account.id },
+        data: { amount: sourceBalance },
+      });
+
+      const linkedAccount = linkedTransaction.accountType;
+      let linkedBalance = linkedAccount.amount;
+      if (linkedTransaction.isInflow) {
+        linkedBalance -= linkedTransaction.amount;
+        linkedBalance += newAmount;
+      } else {
+        linkedBalance += linkedTransaction.amount;
+        linkedBalance -= newAmount;
+      }
+      await tx.accountType.update({
+        where: { id: linkedAccount.id },
+        data: { amount: linkedBalance },
+      });
+
+      return updatedSourceTx;
+    });
+
+    return createSuccessResponse(result, 200);
   }
 
   const oldPeriod = await getOrCreatePeriod(

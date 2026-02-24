@@ -6,11 +6,13 @@ import { Button } from "@radix-ui/themes";
 type DeleteTransactionModalProps = Readonly<{
   onCancel: () => void;
   onConfirm: () => void;
+  isTransfer?: boolean;
 }>;
 
 const DeleteTransactionModal = ({
   onCancel,
   onConfirm,
+  isTransfer = false,
 }: DeleteTransactionModalProps) => {
   return (
     <Portal>
@@ -18,7 +20,7 @@ const DeleteTransactionModal = ({
         <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full mx-4 border border-slate-200">
           <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-gradient-to-r from-red-50 to-red-50">
             <h2 className="text-lg font-bold text-slate-900">
-              Delete Transaction
+              {isTransfer ? "Delete Transfer" : "Delete Transaction"}
             </h2>
             <Button
               onClick={onCancel}
@@ -30,8 +32,9 @@ const DeleteTransactionModal = ({
 
           <div className="p-6">
             <p className="text-slate-700 mb-6">
-              Are you sure you want to delete this transaction? This action
-              cannot be undone.
+              {isTransfer
+                ? "This is a transfer transaction. Deleting it will also delete the linked transaction in the other account. This action cannot be undone."
+                : "Are you sure you want to delete this transaction? This action cannot be undone."}
             </p>
 
             <div className="flex gap-3">

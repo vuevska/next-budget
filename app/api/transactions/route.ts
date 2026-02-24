@@ -44,7 +44,6 @@ export async function POST(request: NextRequest) {
     return createErrorResponse("Account not found", 404);
   }
 
-  // Verify the payee belongs to this user
   const payee = await prisma.payee.findUnique({
     where: { id: payeeId },
   });
@@ -54,6 +53,84 @@ export async function POST(request: NextRequest) {
   }
 
   const txDate = new Date(date);
+
+  const isTransfer = payee.name.startsWith("Transfer to/from:");
+
+  if (isTransfer) {
+    const destAccountName = payee.name.replace("Transfer to/from: ", "").trim();
+
+    const destAccount = await prisma.accountType.findFirst({
+      where: { name: destAccountName, userId: user.id },
+    });
+
+    if (!destAccount) {
+      return createErrorResponse("Destination account not found", 404);
+    }
+
+    const reversePayee = await prisma.payee.findUnique({
+      where: {
+        name_userId: {
+          name: `Transfer to/from: ${account.name}`,
+          userId: user.id,
+        },
+      },
+    });
+
+    if (!reversePayee) {
+      return createErrorResponse("Transfer payee not found for source account", 500);
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      const sourceTx = await tx.transaction.create({
+        data: {
+          amount,
+          description: description || "",
+          payeeId: payee.id,
+          isInflow: false,
+          subCatId: null,
+          accountTypeId: accountTypeId,
+          date: txDate,
+        },
+      });
+
+      const destTx = await tx.transaction.create({
+        data: {
+          amount,
+          description: description || "",
+          payeeId: reversePayee.id,
+          isInflow: true,
+          subCatId: null,
+          accountTypeId: destAccount.id,
+          date: txDate,
+          linkedTransactionId: sourceTx.id,
+        },
+      });
+
+      const updatedSourceTx = await tx.transaction.update({
+        where: { id: sourceTx.id },
+        data: { linkedTransactionId: destTx.id },
+        include: {
+          subCategory: true,
+          payee: true,
+        },
+      });
+
+      await tx.accountType.update({
+        where: { id: accountTypeId },
+        data: { amount: account.amount - amount },
+      });
+
+      await tx.accountType.update({
+        where: { id: destAccount.id },
+        data: { amount: destAccount.amount + amount },
+      });
+
+      return updatedSourceTx;
+    });
+
+    return createSuccessResponse(result, 201);
+  }
+
   const period = await getOrCreatePeriod(
     txDate.getMonth() + 1,
     txDate.getFullYear(),
@@ -67,7 +144,7 @@ export async function POST(request: NextRequest) {
       isInflow,
       subCatId,
       accountTypeId,
-      date: new Date(date),
+      date: txDate,
     },
     include: {
       subCategory: true,
@@ -75,7 +152,6 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  // Update subcategory spent amount if it's an expense (not inflow) and has a subcategory
   if (!isInflow && subCatId) {
     await (prisma as any).subCategoryPeriod.upsert({
       where: {

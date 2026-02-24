@@ -32,12 +32,30 @@ export async function PATCH(
   });
   if (!accountType) return createErrorResponse("Account type not found", 404);
 
+  const oldName = accountType.name;
+
   const updatedIssue = await prisma.accountType.update({
     where: { id: accountType.id },
     data: {
       name,
     },
   });
+
+  if (oldName !== name) {
+    const oldTransferPayeeName = `Transfer to/from: ${oldName}`;
+    const newTransferPayeeName = `Transfer to/from: ${name}`;
+
+    await prisma.payee.updateMany({
+      where: {
+        name: oldTransferPayeeName,
+        userId: authResult.id,
+        isSystem: true,
+      },
+      data: {
+        name: newTransferPayeeName,
+      },
+    });
+  }
 
   return createSuccessResponse(updatedIssue, 201);
 }
