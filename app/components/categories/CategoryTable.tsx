@@ -59,7 +59,7 @@ const CategoryTable = ({
         items={categoryList.map((cat) => cat.id)}
         strategy={verticalListSortingStrategy}
       >
-        <div className="space-y-4">
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
           {categoryList.map((category) => (
             <SortableCategoryItem
               key={category.id}

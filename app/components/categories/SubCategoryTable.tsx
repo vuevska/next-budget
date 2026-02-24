@@ -78,26 +78,26 @@ function EditableSubCategoryName({
           onKeyDown={handleKeyDown}
           onBlur={handleSave}
           disabled={isSaving}
-          className="font-medium text-slate-900 bg-white border-2 border-indigo-300 rounded-md px-2 py-0.5 text-xs outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all w-32"
+          className="font-medium text-slate-900 bg-white border border-indigo-300 rounded px-2 py-0.5 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200 transition-all w-36 sm:w-44"
           maxLength={255}
         />
         <button
           onMouseDown={(e) => e.preventDefault()}
           onClick={handleSave}
           disabled={isSaving}
-          className="p-1 rounded bg-emerald-100 text-emerald-600 hover:bg-emerald-200 transition-colors"
+          className="p-0.5 rounded text-emerald-500 hover:text-emerald-600 transition-colors"
           aria-label="Save"
         >
-          <FiCheck size={12} />
+          <FiCheck size={13} />
         </button>
         <button
           onMouseDown={(e) => e.preventDefault()}
           onClick={handleCancel}
           disabled={isSaving}
-          className="p-1 rounded bg-red-100 text-red-500 hover:bg-red-200 transition-colors"
+          className="p-0.5 rounded text-rose-400 hover:text-rose-500 transition-colors"
           aria-label="Cancel"
         >
-          <FiX size={12} />
+          <FiX size={13} />
         </button>
       </div>
     );
@@ -105,9 +105,9 @@ function EditableSubCategoryName({
 
   return (
     <div className="flex items-center gap-2 truncate">
-      <div className="w-1.5 h-1.5 rounded-full bg-slate-500 shrink-0" />
+      <div className="w-1.5 h-1.5 rounded-full bg-indigo-300 shrink-0" />
       <span
-        className="font-medium text-slate-900 truncate cursor-pointer hover:text-indigo-600 transition-colors"
+        className="font-medium text-slate-700 truncate cursor-pointer hover:text-indigo-600 transition-colors text-sm"
         onDoubleClick={() => setIsEditing(true)}
         title="Double-click to edit"
       >
@@ -124,26 +124,9 @@ export default function SubCategoryTable({
 }: SubCategoryTableProps) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-xs table-fixed">
-        <thead>
-          <tr className="bg-slate-50 border-b border-slate-200">
-            <th className="px-2 sm:px-4 py-2 text-left font-medium text-slate-600 w-[40%]">
-              Name
-            </th>
-            <th className="px-2 sm:px-4 py-2 text-right font-medium text-slate-600 w-[20%]">
-              Budgeted
-            </th>
-            <th className="px-2 sm:px-4 py-2 text-right font-medium text-slate-600 w-[20%]">
-              Spent
-            </th>
-            <th className="px-2 sm:px-4 py-2 text-right font-medium text-slate-600 w-[20%]">
-              Available
-            </th>
-          </tr>
-        </thead>
-
-        <tbody className="divide-y divide-slate-200">
-          {subCategories.map((subCategory) => {
+      <table className="w-full text-sm table-fixed">
+        <tbody>
+          {subCategories.map((subCategory, index) => {
             const budgeted = subCategory.periodBudgeted ?? 0;
             const spent = subCategory.periodSpent ?? 0;
             const rollover = subCategory.rollover ?? 0;
@@ -158,21 +141,25 @@ export default function SubCategoryTable({
                   ? "bg-amber-400"
                   : "bg-emerald-400";
 
+            const isLast = index === subCategories.length - 1;
+
             return (
               <tr
                 key={subCategory.id}
-                className="bg-white hover:bg-slate-50 transition-colors"
+                className={`bg-white hover:bg-slate-50/60 transition-colors ${
+                  !isLast ? "border-b border-slate-100" : ""
+                }`}
               >
-                <td className="px-2 sm:px-4 py-2">
+                <td className="px-3 sm:px-5 py-2 w-[40%]">
                   <EditableSubCategoryName
                     subCategory={subCategory}
                     onRenamed={onSubCategoryRenamed}
                   />
-                  {/* Budget usage bar — shows how much of the budgeted amount has been spent */}
+                  {/* Budget usage bar */}
                   {budgeted > 0 && (
-                    <div className="mt-1.5 w-full h-1 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="mt-1 w-full h-1 bg-slate-100 rounded-full overflow-hidden">
                       <div
-                        className={`h-full ${barColor} transition-all duration-300`}
+                        className={`h-full ${barColor} transition-all duration-500 ease-out`}
                         style={{
                           width: `${Math.min(percentSpent, 100)}%`,
                         }}
@@ -181,10 +168,10 @@ export default function SubCategoryTable({
                   )}
                 </td>
 
-                <td className="px-2 sm:px-4 py-2 text-right">
+                <td className="px-2 sm:px-4 py-2 text-right w-[20%]">
                   <button
                     type="button"
-                    className="font-medium text-slate-700 hover:text-indigo-600 focus:outline-none focus:underline"
+                    className="font-medium text-slate-600 hover:text-indigo-600 focus:outline-none focus:underline transition-colors"
                     onClick={
                       onBudgetedClick
                         ? () => onBudgetedClick(subCategory)
@@ -195,14 +182,20 @@ export default function SubCategoryTable({
                   </button>
                 </td>
 
-                <td className="px-2 sm:px-4 py-2 text-right">
-                  <span className="font-medium text-rose-600 text-xs">
+                <td className="px-2 sm:px-4 py-2 text-right w-[20%]">
+                  <span className="font-medium text-rose-500">
                     {spent > 0 ? `\u2212${formatMKD(spent)}` : formatMKD(spent)}
                   </span>
                 </td>
 
-                <td className="px-2 sm:px-4 py-2 text-right">
-                  <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
+                <td className="px-2 sm:px-4 py-2 text-right w-[20%]">
+                  <span
+                    className={`inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                      available < 0
+                        ? "bg-rose-100 text-rose-700"
+                        : "bg-emerald-50 text-emerald-700"
+                    }`}
+                  >
                     {formatMKD(available)}
                   </span>
                 </td>
