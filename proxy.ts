@@ -6,7 +6,6 @@ export default withAuth(
     const { pathname } = request.nextUrl;
     const token = request.nextauth.token;
 
-    // Redirect logged-in users away from signin
     if (pathname === "/auth/signin" && token) {
       return NextResponse.redirect(new URL("/", request.url));
     }
@@ -14,19 +13,16 @@ export default withAuth(
     return NextResponse.next();
   },
   {
+    secret: process.env.NEXTAUTH_SECRET, 
     callbacks: {
       authorized: ({ token, req }) => {
         const pathname = req.nextUrl.pathname;
-
-        // Allow auth routes without a token
         if (
           pathname.startsWith("/auth/signin") ||
           pathname.startsWith("/api/auth")
         ) {
           return true;
         }
-
-        // Protect everything else
         return !!token;
       },
     },
