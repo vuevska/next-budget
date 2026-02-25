@@ -3,6 +3,7 @@ import prisma from "@/prisma/client";
 import { registerSchema } from "@/app/lib/validationSchema";
 import { hashPassword } from "@/app/lib/password-utils";
 import { createErrorResponse, createSuccessResponse } from "@/app/lib/auth";
+import { createDefaultCategories } from "@/app/lib/data/category";
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
@@ -50,6 +51,8 @@ export async function POST(request: NextRequest) {
       name: true,
     },
   });
+
+  await createDefaultCategories(user.id);
 
   return createSuccessResponse(
     { message: "User created successfully", user },
