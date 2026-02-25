@@ -1,7 +1,7 @@
 "use client";
 
 import { Box } from "@radix-ui/themes";
-import SignOutButton from "./signout/SignOutButton";
+import SignOutButton from "./auth/SignOutButton";
 import { TbUserDollar } from "react-icons/tb";
 import { AccountType } from "@prisma/client";
 import AccountList from "./account-types/AccountList";

@@ -1,23 +1,19 @@
 import prisma from "@/prisma/client";
 
 export async function getOrCreatePeriod(month: number, year: number) {
-  const existing = await prisma.period.findUnique({
-    where: {
-      month_year: {
-        month,
-        year,
+  try {
+    return await prisma.period.upsert({
+      where: {
+        month_year: { month, year },
       },
-    },
-  });
-
-  if (existing) return existing;
-
-  return prisma.period.create({
-    data: {
-      month,
-      year,
-    },
-  });
+      update: {},
+      create: { month, year },
+    });
+  } catch (error) {
+    return await prisma.period.findUniqueOrThrow({
+      where: { month_year: { month, year } },
+    });
+  }
 }
 
 export async function getOrCreateCurrentPeriod() {
@@ -52,17 +48,6 @@ export async function getOrCreateToBudget(
   userId: string,
   period: { id: number; month: number; year: number }
 ) {
-  const existing = await prisma.toBudget.findUnique({
-    where: {
-      periodId_userId: {
-        periodId: period.id,
-        userId,
-      },
-    },
-  });
-
-  if (existing) return existing;
-
   let carryOverAmount = 0;
   const prevMonth = period.month === 1 ? 12 : period.month - 1;
   const prevYear = period.month === 1 ? period.year - 1 : period.year;
@@ -80,20 +65,31 @@ export async function getOrCreateToBudget(
     }
   }
 
-  return prisma.toBudget.upsert({
-    where: {
-      periodId_userId: {
+  try {
+    return await prisma.toBudget.upsert({
+      where: {
+        periodId_userId: {
+          periodId: period.id,
+          userId,
+        },
+      },
+      update: {},
+      create: {
         periodId: period.id,
         userId,
+        amount: carryOverAmount,
       },
-    },
-    update: {},
-    create: {
-      periodId: period.id,
-      userId,
-      amount: carryOverAmount,
-    },
-  });
+    });
+  } catch (error) {
+    return await prisma.toBudget.findUniqueOrThrow({
+      where: {
+        periodId_userId: {
+          periodId: period.id,
+          userId,
+        },
+      },
+    });
+  }
 }
 
 export async function getFuturePeriodIds(month: number, year: number) {
