@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import GoogleSignInButton from "@/app/components/auth/GoogleSignInButton";
 import EmailSignInForm from "@/app/components/auth/EmailSignInForm";
 import RegisterForm from "@/app/components/auth/RegisterForm";
@@ -48,7 +48,9 @@ export default function SignInPage() {
             {activeTab === "signin" ? (
               <>
                 <div className="space-y-4">
-                  <EmailSignInForm />
+                  <Suspense fallback={<div>Loading...</div>}>
+                    <EmailSignInForm />
+                  </Suspense>
                 </div>
 
                 <div className="relative">

@@ -3,14 +3,10 @@ import { getAccountTypes } from "./lib/data/account-type";
 import { getCategories } from "./lib/data/category";
 import { getToBeBudgeted } from "./lib/data/budget";
 import LayoutContent from "./components/LayoutContent";
-import { requireAuth } from "./lib/auth";
-import { NextResponse } from "next/server";
+import { requireServerAuth } from "./lib/auth";
 
 export default async function HomePage() {
-  const authResult = await requireAuth();
-  if (authResult instanceof NextResponse) return authResult;
-
-  const currentUser = authResult;
+  const currentUser = await requireServerAuth();
 
   if (!currentUser) {
     redirect("/auth/signin");

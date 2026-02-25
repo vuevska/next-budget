@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import authOptions from "@/app/lib/authOptions";
 import prisma from "@/prisma/client";
 import { NextResponse } from "next/server";
+import { redirect } from "next/navigation";
 
 export interface AuthenticatedUser {
   id: string;
@@ -37,7 +38,21 @@ export async function getCurrentUser(): Promise<AuthenticatedUser | null> {
 
 /**
  * Middleware to ensure user is authenticated and returns the user as a plain object
+ * @returns {Promise<AuthenticatedUser>} The authenticated user
+ * Use this in Server Components. It returns the user or redirects to sign-in.
+ */
+export async function requireServerAuth(): Promise<AuthenticatedUser> {
+  const user = await getCurrentUser();
+  if (!user) {
+    redirect("/auth/signin");
+  }
+  return user;
+}
+
+/**
+ * Middleware to ensure user is authenticated and returns the user as a plain object
  * @returns {Promise<NextResponse | AuthenticatedUser>} Returns error response if not authenticated, user data if authenticated
+ * Use this in API handlers. It returns the user or a 401 response.
  */
 export async function requireAuth(): Promise<NextResponse | AuthenticatedUser> {
   const user = await getCurrentUser();
