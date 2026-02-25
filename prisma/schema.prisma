@@ -3,14 +3,14 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model AccountType {
   id          Int           @id @default(autoincrement())
-  name        String        @db.VarChar(255)
-  amount      Float         @db.Double
+  name        String
+  amount      Float         @default(0)
   userId      String
   user        User          @relation(fields: [userId], references: [id])
   Transaction Transaction[]
@@ -49,7 +49,7 @@ model User {
   email         String?       @unique
   emailVerified DateTime?
   image         String?
-  password      String?       @db.Text
+  password      String?
   accounts      Account[]
   sessions      Session[]
   AccountType   AccountType[]
@@ -60,7 +60,7 @@ model User {
 
 model Payee {
   id          Int           @id @default(autoincrement())
-  name        String        @db.VarChar(255)
+  name        String
   isSystem    Boolean       @default(false)
   userId      String
   user        User          @relation(fields: [userId], references: [id])
@@ -79,7 +79,7 @@ model VerificationToken {
 
 model Category {
   id          Int           @id @default(autoincrement())
-  name        String        @db.VarChar(255)
+  name        String
   userId      String
   user        User          @relation(fields: [userId], references: [id])
   order       Int           @default(0)
@@ -88,7 +88,7 @@ model Category {
 
 model SubCategory {
   id          Int                 @id @default(autoincrement())
-  name        String              @db.VarChar(255)
+  name        String
   catId       Int
   category    Category            @relation(fields: [catId], references: [id])
   Transaction Transaction[]
@@ -99,8 +99,8 @@ model SubCategoryPeriod {
   id            Int      @id @default(autoincrement())
   periodId      Int
   subCategoryId Int
-  budgeted      Float    @default(0) @db.Double
-  spent         Float    @default(0) @db.Double
+  budgeted      Float    @default(0)
+  spent         Float    @default(0)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -113,9 +113,9 @@ model SubCategoryPeriod {
 
 model Transaction {
   id            Int          @id @default(autoincrement())
-  amount        Float        @db.Double
+  amount        Float
   isInflow      Boolean
-  description   String       @db.VarChar(255)
+  description   String
   payeeId       Int
   payee         Payee        @relation(fields: [payeeId], references: [id])
   date          DateTime     @default(now())
@@ -147,7 +147,7 @@ model ToBudget {
   id        Int      @id @default(autoincrement())
   periodId  Int
   userId    String
-  amount    Float    @db.Double
+  amount    Float    @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
