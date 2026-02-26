@@ -1,3 +1,5 @@
+"use client";
+
 import {
   closestCenter,
   DndContext,
@@ -11,6 +13,7 @@ import {
 import { SortableCategoryItem } from "./SortableCategoryItem";
 import MoveBudgetModal from "./MoveBudgetModal";
 import { SubCategory, SubCategoryPeriod } from "@prisma/client";
+import { useId, useState, useEffect } from "react";
 
 type CategoryTableProps = Readonly<{
   categoryList: any[];
@@ -49,8 +52,28 @@ const CategoryTable = ({
   onCategoryRenamed,
   onSubCategoryRenamed,
 }: CategoryTableProps) => {
+  const dndId = useId();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return (
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        {categoryList.map((category) => (
+          <div key={category.id} className="border-b border-slate-100 p-4">
+            <span className="text-slate-400 text-sm">Loading Category: {category.name}...</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <DndContext
+      id={dndId}
       sensors={sensors}
       collisionDetection={collisionDetection}
       onDragEnd={handleDragEnd}

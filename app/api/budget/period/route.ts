@@ -105,6 +105,7 @@ export async function GET(req: NextRequest) {
           periodSpent: current.spent,
           rollover,
           available,
+          subCategory: { ...sub }
         };
       }),
     };

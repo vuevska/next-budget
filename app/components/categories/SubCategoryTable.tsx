@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { formatMKD } from "@/app/lib/formatMKD";
 import { SubCategory } from "@prisma/client";
 import { FiCheck, FiX, FiEdit2 } from "react-icons/fi";
 import { updateSubCategory } from "@/app/lib/services/sub-category";
+import FormattedAmount from "../FormattedAmount";
 
 type SubCategoryTableProps = Readonly<{
   subCategories: (SubCategory & {
@@ -181,13 +181,15 @@ export default function SubCategoryTable({
                         : undefined
                     }
                   >
-                    {budgeted > 0 ? `+${formatMKD(budgeted)}` : formatMKD(budgeted)}
+                    {budgeted > 0 && "+"}
+                    <FormattedAmount amount={budgeted} />
                   </button>
                 </td>
 
                 <td className="px-2 sm:px-4 py-2 text-right w-[20%]">
                   <span className="font-medium text-rose-500">
-                    {spent > 0 ? `\u2212${formatMKD(spent)}` : formatMKD(spent)}
+                    {spent > 0 && "\u2212"}
+                    <FormattedAmount amount={spent} />
                   </span>
                 </td>
 
@@ -199,7 +201,7 @@ export default function SubCategoryTable({
                         : "bg-emerald-50 text-emerald-700"
                     }`}
                   >
-                    {formatMKD(available)}
+                    <FormattedAmount amount={available} />
                   </span>
                 </td>
               </tr>

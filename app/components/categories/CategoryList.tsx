@@ -29,9 +29,15 @@ import EmptyCategories from "./EmptyCategories";
 import CategoryTable from "./CategoryTable";
 
 export type CategoryBudgetView = Category & {
-  SubCategory: (SubCategoryPeriod & {
+  SubCategory: Array<{
+    id: number;
+    subCategoryId: number;
+    periodBudgeted: number;
+    periodSpent: number;
+    rollover: number;
+    available: number;
     subCategory: SubCategory;
-  })[];
+  }>;
 };
 
 export type CategoryListProps = Readonly<{
@@ -107,25 +113,22 @@ const CategoryList = forwardRef<CategoryListRef, CategoryListProps>(
       newSubCategory: SubCategory,
       newSubCategoryPeriod: SubCategoryPeriod,
     ) => {
-      const subCategoryWithBudget: SubCategoryPeriod = {
+      const subCategoryWithBudget = {
         ...newSubCategory,
-        budgeted: 0,
-        spent: 0,
-        periodId: activeMonth,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        subCategoryId: newSubCategory.id,
+        ...newSubCategoryPeriod,
+        periodBudgeted: 0,
+        subCategory: { ...newSubCategory },
       };
       setCategoryList((prevList) =>
-      prevList.map((cat) =>
-        cat.id === categoryId
-          ? {
-              ...cat,
-              SubCategory: [...cat.SubCategory, subCategoryWithBudget as any],
-            }
-          : cat
-      )
-    );
+        prevList.map((cat) =>
+          cat.id === categoryId
+            ? {
+                ...cat,
+                SubCategory: [...cat.SubCategory, subCategoryWithBudget as any],
+              }
+            : cat
+        )
+      );
       setExpandedAddSubCategory(null);
       router.refresh();
     };

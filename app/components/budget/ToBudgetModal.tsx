@@ -174,7 +174,7 @@ export default function ToBudgetModal({
                     <option value="">Select a subcategory</option>
                     {currentCategory?.SubCategory.map((subCat) => (
                       <option key={subCat.id} value={subCat.id}>
-                        {subCat.subCategory.name}
+                        {subCat.subCategory?.name}
                         {typeof (subCat as any).periodBudgeted === "number" &&
                           (subCat as any).periodBudgeted > 0 &&
                           ` (Current: ${(subCat as any).periodBudgeted})`}
